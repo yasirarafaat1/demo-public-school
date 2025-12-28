@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS staff (
     contact VARCHAR(50),
     email VARCHAR(255) UNIQUE NOT NULL,
     image_url TEXT,
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'on_leave')),
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'on_leave', 'retired')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

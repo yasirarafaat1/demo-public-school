@@ -593,6 +593,8 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
                                     ? "bg-success"
                                     : member.status === "inactive"
                                     ? "bg-danger"
+                                    : member.status === "retired"
+                                    ? "bg-secondary"
                                     : "bg-warning"
                                 }`}
                               >
@@ -600,6 +602,8 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
                                   ? "Active"
                                   : member.status === "inactive"
                                   ? "Inactive"
+                                  : member.status === "retired"
+                                  ? "Retired"
                                   : "On Leave"}
                               </span>
                             </td>
@@ -685,6 +689,8 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
                                           ? "bg-success"
                                           : member.status === "inactive"
                                           ? "bg-danger"
+                                          : member.status === "retired"
+                                          ? "bg-secondary"
                                           : "bg-warning"
                                       } ms-1`}
                                     >
@@ -692,6 +698,8 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
                                         ? "Active"
                                         : member.status === "inactive"
                                         ? "Inactive"
+                                        : member.status === "retired"
+                                        ? "Retired"
                                         : "On Leave"}
                                     </span>
                                   </div>
@@ -862,6 +870,7 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                         <option value="on_leave">On Leave</option>
+                        <option value="retired">Retired</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -1053,6 +1062,7 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
                           <option value="on_leave">On Leave</option>
+                          <option value="retired">Retired</option>
                         </Form.Select>
                       </Form.Group>
                     </Col>

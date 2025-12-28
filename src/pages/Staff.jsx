@@ -315,7 +315,28 @@ const Staff = () => {
                           </ErrorBoundary>
                         </div>
                         <div>
-                          <h5 className="mb-1">{staff.name}</h5>
+                          <div className="d-flex align-items-center mb-1">
+                            <h5 className="mb-0 me-2">{staff.name}</h5>
+                            <span
+                              className={`badge ${
+                                staff.status === "active"
+                                  ? "bg-success"
+                                  : staff.status === "inactive"
+                                  ? "bg-danger"
+                                  : staff.status === "retired"
+                                  ? "bg-secondary"
+                                  : "bg-warning"
+                              }`}
+                            >
+                              {staff.status === "active"
+                                ? "Active"
+                                : staff.status === "inactive"
+                                ? "Inactive"
+                                : staff.status === "retired"
+                                ? "Retired"
+                                : "On Leave"}
+                            </span>
+                          </div>
                           <p className="text-muted mb-2 d-flex align-items-center">
                             {getRoleIcon(staff.role)}
                             {staff.role}
