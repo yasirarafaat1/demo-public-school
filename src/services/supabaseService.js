@@ -540,7 +540,7 @@ export const getFeeStructure = async () => {
         let { data, error } = await supabase
             .from('fee_structure')
             .select('*')
-            .order('class_name', { ascending: true });
+            .order('created_at', { ascending: true });
 
         if (error) throw error;
         return data || [];
