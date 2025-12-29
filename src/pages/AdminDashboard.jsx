@@ -685,9 +685,6 @@ const AdminDashboard = () => {
                       </Card>
                     </Col>
                   </Row>
-
-                  {/* Collapsible Data Panels */}
-
                   <VisitorAnalytics />
                 </div>
               )}

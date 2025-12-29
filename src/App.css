@@ -68,7 +68,8 @@
   }
 
   .hero-section {
-    height: 50vh;
+    height: 45vh !important;
+    min-height: 250px !important;
   }
 
   .features {

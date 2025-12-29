@@ -182,6 +182,45 @@
     margin: 0;
 }
 
+.noticeContent {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.share-button {
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.share-button:hover {
+    opacity: 1;
+}
+
+.noticeItem:hover .share-button {
+    opacity: 1;
+}
+
+.share-button .dropdown-toggle {
+    color: #666 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 4px !important;
+    transition: all 0.3s ease !important;
+}
+
+.share-button .dropdown-toggle:hover {
+    color: #333 !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.share-button .dropdown-toggle::after {
+    display: none !important;
+}
+
 .noNotices {
     text-align: center;
     color: #fff;

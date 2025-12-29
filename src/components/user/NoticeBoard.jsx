@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { FaThumbtack, FaCalendarAlt } from "react-icons/fa";
 import { getNotices } from "../../services/supabaseService";
+import ShareButton from "./ShareButton";
 import styles from "../../styles/NoticeBoard.module.css";
 
 const NoticeBoard = () => {
@@ -14,6 +15,56 @@ const NoticeBoard = () => {
   useEffect(() => {
     fetchNotices();
   }, []);
+
+  useEffect(() => {
+    // Handle hash fragment for shared notice links
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#notice-') && notices.length > 0) {
+      const noticeId = hash.replace('#notice-', '');
+      highlightNotice(noticeId);
+    }
+  }, [notices]);
+
+  const highlightNotice = (noticeId) => {
+    const noticeElement = document.getElementById(`notice-${noticeId}`);
+    if (noticeElement) {
+      // Add highlight class
+      noticeElement.classList.add(styles.highlightedNotice);
+      
+      // Scroll to notice
+      noticeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        noticeElement.classList.remove(styles.highlightedNotice);
+      }, 3000);
+      
+      // Pause auto-scrolling temporarily
+      if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+        setTimeout(() => {
+          // Resume auto-scrolling after 5 seconds
+          if (!loading && notices.length > 0 && noticesContainerRef.current) {
+            startAutoScroll();
+          }
+        }, 5000);
+      }
+    }
+  };
+
+  const startAutoScroll = () => {
+    const container = noticesContainerRef.current;
+    if (!container) return;
+
+    scrollIntervalRef.current = setInterval(() => {
+      if (!isHoveredRef.current) {
+        container.scrollTop += 1;
+        if (container.scrollTop >= container.scrollHeight / 2) {
+          container.scrollTop = 0;
+        }
+      }
+    }, 30);
+  };
 
   const fetchNotices = async () => {
     try {
@@ -29,30 +80,15 @@ const NoticeBoard = () => {
   // Auto-scrolling effect
   useEffect(() => {
     if (!loading && notices.length > 0 && noticesContainerRef.current) {
-      const container = noticesContainerRef.current;
-
       // Clear any existing interval
       if (scrollIntervalRef.current) {
         clearInterval(scrollIntervalRef.current);
       }
 
       // Start scrolling after a delay
-      const startScrolling = () => {
-        scrollIntervalRef.current = setInterval(() => {
-          // Only scroll if not hovered
-          if (!isHoveredRef.current) {
-            container.scrollTop += 1;
-
-            // Reset to top when we've scrolled past all notices
-            if (container.scrollTop >= container.scrollHeight / 2) {
-              container.scrollTop = 0;
-            }
-          }
-        }, 30); // Adjust speed here (lower = faster)
-      };
-
-      // Start scrolling after a delay
-      const scrollTimer = setTimeout(startScrolling, 2000);
+      const scrollTimer = setTimeout(() => {
+        startAutoScroll();
+      }, 2000);
 
       // Clean up on unmount
       return () => {
@@ -111,35 +147,56 @@ const NoticeBoard = () => {
             {notices.map((notice) => (
               <div
                 key={notice.id}
+                id={`notice-${notice.id}`}
                 className={`${styles.noticeItem} ${
                   notice.is_important ? styles.important : ""
                 }`}
               >
-                <h3
-                  className={styles.noticeTitle}
-                  onClick={() => handleNoticeClick(notice.link)}
-                  style={notice.link ? { cursor: "pointer" } : {}}
-                >
-                  {notice.is_important && (
-                    <FaThumbtack className="text-danger me-2" />
-                  )}
-                  {notice.link ? (
-                    <a
-                      href={notice.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="flex-grow-1">
+                    <h3
+                      className={styles.noticeTitle}
+                      onClick={() => handleNoticeClick(notice.link)}
+                      style={notice.link ? { cursor: "pointer" } : {}}
                     >
-                      {notice.title}
-                    </a>
-                  ) : (
-                    notice.title
-                  )}
-                </h3>
-                <p className={styles.noticeDate}>
-                  <FaCalendarAlt className="me-2" />
-                  {formatDate(notice.created_at)}
-                </p>
+                      {notice.is_important && (
+                        <FaThumbtack className="text-danger me-2" />
+                      )}
+                      {notice.link ? (
+                        <a
+                          href={notice.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {notice.title}
+                        </a>
+                      ) : (
+                        notice.title
+                      )}
+                    </h3>
+                    <p className={styles.noticeDate}>
+                      <FaCalendarAlt className="me-2" />
+                      {formatDate(notice.created_at)}
+                    </p>
+                    {notice.content && (
+                      <p className={`${styles.noticeContent} text-muted small mt-2`}>
+                        {notice.content.length > 150 
+                          ? notice.content.substring(0, 150) + '...'
+                          : notice.content
+                        }
+                      </p>
+                    )}
+                  </div>
+                  <div className="ms-2">
+                    <ShareButton 
+                      notice={notice} 
+                      size="sm" 
+                      variant="outline-secondary"
+                      className="share-button"
+                    />
+                  </div>
+                </div>
               </div>
             ))}
             {/* Duplicate notices for seamless looping */}
@@ -150,31 +207,51 @@ const NoticeBoard = () => {
                   notice.is_important ? styles.important : ""
                 }`}
               >
-                <h3
-                  className={styles.noticeTitle}
-                  onClick={() => handleNoticeClick(notice.link)}
-                  style={notice.link ? { cursor: "pointer" } : {}}
-                >
-                  {notice.is_important && (
-                    <FaThumbtack className="text-danger me-2" />
-                  )}
-                  {notice.link ? (
-                    <a
-                      href={notice.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="flex-grow-1">
+                    <h3
+                      className={styles.noticeTitle}
+                      onClick={() => handleNoticeClick(notice.link)}
+                      style={notice.link ? { cursor: "pointer" } : {}}
                     >
-                      {notice.title}
-                    </a>
-                  ) : (
-                    notice.title
-                  )}
-                </h3>
-                <p className={styles.noticeDate}>
-                  <FaCalendarAlt className="me-2" />
-                  {formatDate(notice.created_at)}
-                </p>
+                      {notice.is_important && (
+                        <FaThumbtack className="text-danger me-2" />
+                      )}
+                      {notice.link ? (
+                        <a
+                          href={notice.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {notice.title}
+                        </a>
+                      ) : (
+                        notice.title
+                      )}
+                    </h3>
+                    <p className={styles.noticeDate}>
+                      <FaCalendarAlt className="me-2" />
+                      {formatDate(notice.created_at)}
+                    </p>
+                    {notice.content && (
+                      <p className={`${styles.noticeContent} text-muted small mt-2`}>
+                        {notice.content.length > 150 
+                          ? notice.content.substring(0, 150) + '...'
+                          : notice.content
+                        }
+                      </p>
+                    )}
+                  </div>
+                  <div className="ms-2">
+                    <ShareButton 
+                      notice={notice} 
+                      size="sm" 
+                      variant="outline-secondary"
+                      className="share-button"
+                    />
+                  </div>
+                </div>
               </div>
             ))}
           </div>

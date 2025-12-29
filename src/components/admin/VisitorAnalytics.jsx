@@ -8,29 +8,16 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
-  Legend,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
+  ResponsiveContainer,
+} from "recharts";
 import { getVisitorStatistics } from "../../services/supabaseService";
 import styles from "../../styles/VisitorAnalytics.module.css";
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const VisitorAnalytics = () => {
   const [analytics, setAnalytics] = useState({
@@ -52,9 +39,6 @@ const VisitorAnalytics = () => {
       setLoading(true);
       setError("");
       const data = await getVisitorStatistics();
-      console.log("Full visitor analytics data:", JSON.stringify(data, null, 2));
-      console.log("Daily stats length:", data.dailyStats?.length);
-      console.log("Page visitors:", data.pageVisitors);
       setAnalytics(data);
     } catch (err) {
       console.error("Error fetching visitor analytics:", err);
@@ -64,58 +48,14 @@ const VisitorAnalytics = () => {
     }
   };
 
-  // Prepare chart data
-  const chartData = {
-    labels: analytics.dailyStats.map((stat) => {
-      const date = new Date(stat.date);
-      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    }),
-    datasets: [
-      {
-        label: "Cumulative Total Visitors",
-        data: analytics.dailyStats.map((stat) => stat.cumulativeTotalVisitors || 0),
-        borderColor: "rgb(75, 192, 192)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        tension: 0.1,
-      },
-      {
-        label: "Cumulative New Visitors",
-        data: analytics.dailyStats.map((stat) => stat.cumulativeNewVisitors || 0),
-        borderColor: "rgb(54, 162, 235)",
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        tension: 0.1,
-      },
-      {
-        label: "Cumulative Return Visitors",
-        data: analytics.dailyStats.map((stat) => stat.cumulativeReturnVisitors || 0),
-        borderColor: "rgb(255, 99, 132)",
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "Cumulative Visitor Trends (Last 30 Days)",
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-        },
-      },
-    },
-  };
+  // Prepare chart data for Recharts
+  const chartData = analytics.dailyStats.map((stat) => ({
+    date: new Date(stat.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    totalVisitors: stat.totalVisitors || 0,
+    cumulativeTotalVisitors: stat.cumulativeTotalVisitors || 0,
+    cumulativeNewVisitors: stat.cumulativeNewVisitors || 0,
+    cumulativeReturnVisitors: stat.cumulativeReturnVisitors || 0,
+  }));
 
   if (loading) {
     return (
@@ -271,7 +211,64 @@ const VisitorAnalytics = () => {
         <Card.Body>
           <div className={styles.chartContainer}>
             {analytics.dailyStats.length > 0 ? (
-              <Line data={chartData} options={chartOptions} />
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12, fill: '#666' }}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12, fill: '#666' }}
+                    axisLine={false}
+                    tickFormatter={(value) => {
+                      if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                      if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+                      return value;
+                    }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)', 
+                      border: 'none', 
+                      borderRadius: '8px',
+                      color: '#fff'
+                    }}
+                    formatter={(value, name) => {
+                      const formattedValue = Number(value).toLocaleString();
+                      return [formattedValue, name.replace('cumulative', '').replace(/([A-Z])/g, ' $1').trim()];
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="cumulativeTotalVisitors" 
+                    stroke="#4BC0C0" 
+                    strokeWidth={2}
+                    dot={{ fill: '#4BC0C0', r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="Total Visitors"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="cumulativeNewVisitors" 
+                    stroke="#36A2EB" 
+                    strokeWidth={2}
+                    dot={{ fill: '#36A2EB', r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="New Visitors"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="cumulativeReturnVisitors" 
+                    stroke="#FF6384" 
+                    strokeWidth={2}
+                    dot={{ fill: '#FF6384', r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="Return Visitors"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             ) : (
               <div className="text-center py-5">
                 <FaChartLine className="text-muted mb-3" size={48} />

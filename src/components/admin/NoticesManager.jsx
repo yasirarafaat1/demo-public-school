@@ -19,6 +19,7 @@ import {
   deleteNotice,
 } from "../../services/supabaseService";
 import { sendNoticeNotification } from "../../services/notificationService";
+import ShareButton from "../user/ShareButton";
 
 const NoticesManager = () => {
   const [notices, setNotices] = useState([]);
@@ -218,6 +219,12 @@ const NoticesManager = () => {
                           </td>
                           <td>
                             <div className="d-flex justify-content-end gap-2">
+                              <ShareButton 
+                                notice={notice} 
+                                size="sm" 
+                                variant="outline-info"
+                                className="me-1"
+                              />
                               <Button
                                 variant="outline-primary"
                                 size="sm"

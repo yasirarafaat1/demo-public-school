@@ -969,12 +969,21 @@ export const trackVisitor = async (visitorData = {}) => {
         if (error) {
             // If it's a duplicate session ID, update existing record
             if (error.code === '23505' || error.message.includes('duplicate key')) {
+                // First get current values to increment them properly
+                const { data: currentData, error: fetchError } = await supabase
+                    .from('visitor_analytics')
+                    .select('page_views, duration_seconds')
+                    .eq('session_id', sessionId)
+                    .single();
+
+                if (fetchError) throw fetchError;
+
                 const { data: updatedData, error: updateError } = await supabase
                     .from('visitor_analytics')
                     .update({
-                        page_views: supabase.rpc('increment', { x: 1 }),
+                        page_views: (currentData.page_views || 0) + 1,
                         exit_page: window.location.href,
-                        duration_seconds: supabase.rpc('increment', { x: visitorData.durationSeconds || 0 }),
+                        duration_seconds: (currentData.duration_seconds || 0) + (visitorData.durationSeconds || 0),
                         updated_at: now.toISOString()
                     })
                     .eq('session_id', sessionId)
@@ -1026,7 +1035,8 @@ export const getVisitorAnalytics = async (options = {}) => {
         return data || [];
     } catch (error) {
         console.error("Error fetching visitor analytics:", error.message);
-        throw error;
+        // Return empty array instead of throwing to prevent UI crashes
+        return [];
     }
 };
 
@@ -1038,45 +1048,67 @@ export const getVisitorStatistics = async () => {
     try {
         const today = new Date().toISOString().split('T')[0];
         
+        // Helper function to safely execute queries with fallback
+        const safeQuery = async (queryFn) => {
+            try {
+                const result = await queryFn();
+                return { data: result.data, error: null };
+            } catch (error) {
+                console.warn('Query failed, using empty fallback:', error.message);
+                return { data: [], error: error };
+            }
+        };
+        
         // Get total visitors
-        const { data: totalData, error: totalError } = await supabase
-            .from('visitor_analytics')
-            .select('session_id')
-            .eq('is_return_visitor', false);
+        const { data: totalData, error: totalError } = await safeQuery(async () => {
+            return await supabase
+                .from('visitor_analytics')
+                .select('session_id')
+                .eq('is_return_visitor', false);
+        });
 
         // Get today's visitors
-        const { data: todayData, error: todayError } = await supabase
-            .from('visitor_analytics')
-            .select('session_id')
-            .eq('visit_date', today)
-            .eq('is_return_visitor', false);
+        const { data: todayData, error: todayError } = await safeQuery(async () => {
+            return await supabase
+                .from('visitor_analytics')
+                .select('session_id')
+                .eq('visit_date', today)
+                .eq('is_return_visitor', false);
+        });
 
         // Get return visitors
-        const { data: returnData, error: returnError } = await supabase
-            .from('visitor_analytics')
-            .select('session_id')
-            .eq('is_return_visitor', true);
+        const { data: returnData, error: returnError } = await safeQuery(async () => {
+            return await supabase
+                .from('visitor_analytics')
+                .select('session_id')
+                .eq('is_return_visitor', true);
+        });
 
         // Get daily visitor counts for the last 30 days
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const startDate = thirtyDaysAgo.toISOString().split('T')[0];
 
-        const { data: dailyData, error: dailyError } = await supabase
-            .from('visitor_analytics')
-            .select('visit_date, session_id, is_return_visitor')
-            .gte('visit_date', startDate)
-            .order('visit_date', { ascending: true });
+        const { data: dailyData, error: dailyError } = await safeQuery(async () => {
+            return await supabase
+                .from('visitor_analytics')
+                .select('visit_date, session_id, is_return_visitor')
+                .gte('visit_date', startDate)
+                .order('visit_date', { ascending: true });
+        });
 
         // Get page-specific data
-        const { data: pageData, error: pageError } = await supabase
-            .from('visitor_analytics')
-            .select('page_type, session_id, visit_date')
-            .gte('visit_date', startDate)
-            .order('visit_date', { ascending: true });
+        const { data: pageData, error: pageError } = await safeQuery(async () => {
+            return await supabase
+                .from('visitor_analytics')
+                .select('page_type, session_id, visit_date')
+                .gte('visit_date', startDate)
+                .order('visit_date', { ascending: true });
+        });
 
+        // Log errors for debugging but don't fail the entire function
         if (totalError || todayError || returnError || dailyError || pageError) {
-            throw new Error('Error fetching visitor statistics');
+            console.warn('Some visitor statistics queries failed, using available data');
         }
 
         // Process daily data for chart with cumulative totals
