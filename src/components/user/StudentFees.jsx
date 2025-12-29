@@ -17,12 +17,13 @@ import {
   addFee,
   updateFee,
   deleteFee,
-} from "../services/feeService";
+} from "../../services/feeService";
+import { sendFeeAddedEmail } from "../../services/emailService";
 import {
   getClasses,
   getSessions,
   getStudentClassesByStudentId,
-} from "../services/classStudentService";
+} from "../../services/classStudentService";
 import SkeletonLoader from "./SkeletonLoader";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -161,9 +162,9 @@ const StudentFees = () => {
         sessionId: currentAssignment?.session_id,
         rollNumber: currentAssignment?.roll_number,
         month: feeForm.month,
-        year: parseInt(feeForm.year),
-        amount: parseFloat(feeForm.amount),
-        paidAmount: parseFloat(feeForm.paidAmount),
+        year: parseInt(feeForm.year || new Date().getFullYear(), 10),
+        amount: parseFloat(feeForm.amount || 0),
+        paidAmount: parseFloat(feeForm.paidAmount || 0),
         status: feeForm.status,
         receiptNumber: feeForm.receiptNumber,
       };
@@ -173,7 +174,44 @@ const StudentFees = () => {
         await updateFee(editingFee.id, feeData);
       } else {
         // Add new fee
-        await addFee(feeData);
+        const insertedFee = await addFee(feeData);
+
+        const studentEmail = studentInfo?.email;
+        if (studentEmail) {
+          const dueAmount = (feeData.amount || 0) - (feeData.paidAmount || 0);
+
+          try {
+            await sendFeeAddedEmail({
+              to: "yasirshekh0786@gmail.com",
+              studentName: studentInfo?.student_name || "Student",
+              month: feeData.month,
+              year: feeData.year,
+              totalAmount: feeData.amount,
+              paidAmount: feeData.paidAmount || 0,
+              dueAmount,
+              status: feeData.status,
+              receiptNumber: feeData.receiptNumber,
+              createdAt: insertedFee?.created_at || new Date().toISOString(),
+              portalLink:
+                import.meta.env.VITE_SCHOOL_PORTAL_LINK ||
+                window.location.origin,
+              schoolName: import.meta.env.VITE_SCHOOL_NAME || "Demo Public School",
+              schoolAddress: import.meta.env.VITE_SCHOOL_ADDRESS || "",
+              schoolContact: import.meta.env.VITE_SCHOOL_CONTACT || "",
+              schoolEmail: import.meta.env.VITE_SCHOOL_EMAIL || "",
+            });
+          } catch (emailErr) {
+            console.error("Fee saved but email sending failed:", emailErr);
+            setError(
+              "Fee saved successfully, but email sending failed. Please verify Resend configuration."
+            );
+          }
+        } else {
+          console.warn(
+            "Student email not found. Skipping fee notification email.",
+            studentInfo
+          );
+        }
       }
 
       setShowAddForm(false);

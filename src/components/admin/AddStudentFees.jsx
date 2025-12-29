@@ -12,8 +12,8 @@ import {
 import {
   getStudentByRollNumberAndClassCode,
   getStudents,
-} from "../services/classStudentService";
-import { getStudentFeeSummary } from "../services/feeService";
+} from "../../services/classStudentService";
+import { getStudentFeeSummary } from "../../services/feeService";
 import { useNavigate } from "react-router-dom";
 
 const AddStudentFees = () => {

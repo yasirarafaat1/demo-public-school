@@ -9,8 +9,8 @@ import {
   getStudentClasses,
   assignStudentToClass,
   updateStudentClassAssignment,
-} from "../services/classStudentService";
-import { supabase } from "../services/supabaseService";
+} from "../../services/classStudentService";
+import { supabase } from "../../services/supabaseService";
 import {
   Container,
   Row,
@@ -35,8 +35,8 @@ import {
   FaSearch,
   FaUpload,
 } from "react-icons/fa";
-import StudentProfile from "./StudentProfile";
-import UpdateHistory from "./UpdateHistory";
+import StudentProfile from "../user/StudentProfile";
+import UpdateHistory from "../user/UpdateHistory";
 
 const StudentManager = ({ refreshTimestamp, fetchData }) => {
   const [students, setStudents] = useState([]);

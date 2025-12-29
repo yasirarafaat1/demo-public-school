@@ -899,5 +899,262 @@ export const getUpdateHistory = async (tableName = null, recordId = null) => {
     }
 };
 
+// --- Visitor Analytics Functions ---
+
+/**
+ * Records a visitor session or updates an existing one.
+ * @param {object} visitorData - Visitor tracking data.
+ * @returns {Promise<object>} Response object with visitor data or error.
+ */
+export const trackVisitor = async (visitorData = {}) => {
+    try {
+        // Generate or get session ID from localStorage
+        let sessionId = localStorage.getItem('visitor_session_id');
+        const isNewSession = !sessionId;
+
+        // If no session ID exists, create one
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('visitor_session_id', sessionId);
+        }
+
+        // Determine page type based on current URL
+        const currentPath = window.location.pathname;
+        let pageType = 'other';
+        
+        if (currentPath === '/' || currentPath === '/home') {
+            pageType = 'home';
+        } else if (currentPath.includes('/result')) {
+            pageType = 'result';
+        } else if (currentPath.includes('/admission')) {
+            pageType = 'admission';
+        } else if (currentPath.includes('/contact')) {
+            pageType = 'contact';
+        } else if (currentPath.includes('/about')) {
+            pageType = 'about';
+        } else if (currentPath.includes('/gallery')) {
+            pageType = 'gallery';
+        } else if (currentPath.includes('/class')) {
+            pageType = 'class';
+        } else if (currentPath.includes('/fee')) {
+            pageType = 'fee';
+        }
+
+        // Get current date and time
+        const now = new Date();
+        const visitDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+        // Prepare visitor data
+        const visitorRecord = {
+            session_id: sessionId,
+            ip_address: visitorData.ipAddress || null,
+            user_agent: navigator.userAgent || null,
+            referrer: document.referrer || null,
+            landing_page: window.location.href || null,
+            page_type: pageType,
+            page_views: 1,
+            duration_seconds: 0,
+            is_return_visitor: !isNewSession,
+            visit_date: visitDate,
+            visit_time: now.toISOString()
+        };
+
+        // Try to insert new visitor record
+        const { data, error } = await supabase
+            .from('visitor_analytics')
+            .insert([visitorRecord])
+            .select()
+            .single();
+
+        if (error) {
+            // If it's a duplicate session ID, update existing record
+            if (error.code === '23505' || error.message.includes('duplicate key')) {
+                const { data: updatedData, error: updateError } = await supabase
+                    .from('visitor_analytics')
+                    .update({
+                        page_views: supabase.rpc('increment', { x: 1 }),
+                        exit_page: window.location.href,
+                        duration_seconds: supabase.rpc('increment', { x: visitorData.durationSeconds || 0 }),
+                        updated_at: now.toISOString()
+                    })
+                    .eq('session_id', sessionId)
+                    .select()
+                    .single();
+
+                if (updateError) throw updateError;
+                return updatedData;
+            }
+            throw error;
+        }
+
+        return data;
+    } catch (error) {
+        console.error("Error tracking visitor:", error.message);
+        // Don't throw error for visitor tracking to avoid breaking user experience
+        return null;
+    }
+};
+
+/**
+ * Fetches visitor analytics data.
+ * @param {object} options - Query options (dateRange, etc.).
+ * @returns {Promise<object>} Visitor analytics data.
+ */
+export const getVisitorAnalytics = async (options = {}) => {
+    try {
+        let query = supabase
+            .from('visitor_analytics')
+            .select('*');
+
+        // Apply date range filter if provided
+        if (options.startDate && options.endDate) {
+            query = query
+                .gte('visit_date', options.startDate)
+                .lte('visit_date', options.endDate);
+        } else if (options.startDate) {
+            query = query.gte('visit_date', options.startDate);
+        } else if (options.endDate) {
+            query = query.lte('visit_date', options.endDate);
+        }
+
+        // Order by visit time descending
+        query = query.order('visit_time', { ascending: false });
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        console.error("Error fetching visitor analytics:", error.message);
+        throw error;
+    }
+};
+
+/**
+ * Gets visitor statistics summary.
+ * @returns {Promise<object>} Visitor statistics.
+ */
+export const getVisitorStatistics = async () => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get total visitors
+        const { data: totalData, error: totalError } = await supabase
+            .from('visitor_analytics')
+            .select('session_id')
+            .eq('is_return_visitor', false);
+
+        // Get today's visitors
+        const { data: todayData, error: todayError } = await supabase
+            .from('visitor_analytics')
+            .select('session_id')
+            .eq('visit_date', today)
+            .eq('is_return_visitor', false);
+
+        // Get return visitors
+        const { data: returnData, error: returnError } = await supabase
+            .from('visitor_analytics')
+            .select('session_id')
+            .eq('is_return_visitor', true);
+
+        // Get daily visitor counts for the last 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const startDate = thirtyDaysAgo.toISOString().split('T')[0];
+
+        const { data: dailyData, error: dailyError } = await supabase
+            .from('visitor_analytics')
+            .select('visit_date, session_id, is_return_visitor')
+            .gte('visit_date', startDate)
+            .order('visit_date', { ascending: true });
+
+        // Get page-specific data
+        const { data: pageData, error: pageError } = await supabase
+            .from('visitor_analytics')
+            .select('page_type, session_id, visit_date')
+            .gte('visit_date', startDate)
+            .order('visit_date', { ascending: true });
+
+        if (totalError || todayError || returnError || dailyError || pageError) {
+            throw new Error('Error fetching visitor statistics');
+        }
+
+        // Process daily data for chart with cumulative totals
+        const dailyStats = {};
+        const cumulativeStats = {
+            totalVisitors: 0,
+            newVisitors: 0,
+            returnVisitors: 0
+        };
+        
+        if (dailyData) {
+            dailyData.forEach(visit => {
+                if (!dailyStats[visit.visit_date]) {
+                    dailyStats[visit.visit_date] = {
+                        date: visit.visit_date,
+                        totalVisitors: 0,
+                        newVisitors: 0,
+                        returnVisitors: 0
+                    };
+                }
+                
+                dailyStats[visit.visit_date].totalVisitors++;
+                if (visit.is_return_visitor) {
+                    dailyStats[visit.visit_date].returnVisitors++;
+                } else {
+                    dailyStats[visit.visit_date].newVisitors++;
+                }
+            });
+        }
+
+        // Convert to array and calculate cumulative values
+        const dailyStatsArray = Object.values(dailyStats);
+        dailyStatsArray.forEach((day, index) => {
+            if (index === 0) {
+                cumulativeStats.totalVisitors = day.totalVisitors;
+                cumulativeStats.newVisitors = day.newVisitors;
+                cumulativeStats.returnVisitors = day.returnVisitors;
+            } else {
+                cumulativeStats.totalVisitors += day.totalVisitors;
+                cumulativeStats.newVisitors += day.newVisitors;
+                cumulativeStats.returnVisitors += day.returnVisitors;
+            }
+            
+            // Update with cumulative values
+            day.cumulativeTotalVisitors = cumulativeStats.totalVisitors;
+            day.cumulativeNewVisitors = cumulativeStats.newVisitors;
+            day.cumulativeReturnVisitors = cumulativeStats.returnVisitors;
+        });
+
+        // Process page-specific data
+        const pageStats = {};
+        if (pageData) {
+            pageData.forEach(visit => {
+                if (!pageStats[visit.page_type]) {
+                    pageStats[visit.page_type] = new Set();
+                }
+                pageStats[visit.page_type].add(visit.session_id);
+            });
+        }
+
+        const pageVisitors = {};
+        Object.keys(pageStats).forEach(pageType => {
+            pageVisitors[pageType] = pageStats[pageType].size;
+        });
+
+        return {
+            totalVisitors: new Set(totalData?.map(d => d.session_id) || []).size,
+            todayVisitors: new Set(todayData?.map(d => d.session_id) || []).size,
+            returnVisitors: new Set(returnData?.map(d => d.session_id) || []).size,
+            newVisitors: (new Set(totalData?.map(d => d.session_id) || []).size) - (new Set(returnData?.map(d => d.session_id) || []).size),
+            dailyStats: dailyStatsArray,
+            pageVisitors: pageVisitors
+        };
+    } catch (error) {
+        console.error("Error getting visitor statistics:", error.message);
+        throw error;
+    }
+};
+
 // Export supabase client for use elsewhere
 export { supabase };

@@ -10,58 +10,63 @@ import {
   Modal,
   Alert,
 } from "react-bootstrap";
-import { FaCalendarAlt } from "react-icons/fa";
 import {
-  getImportantDates,
-  addImportantDate,
-  updateImportantDate,
-  deleteImportantDate,
-} from "../services/supabaseService";
+  getFeeStructure,
+  addFeeStructure,
+  updateFeeStructure,
+  deleteFeeStructure,
+} from "../../services/supabaseService";
+import { getClasses } from "../../services/classStudentService"; // Fixed import
+import SkeletonLoader from "../user/SkeletonLoader";
+import { sendFeeStructureNotification } from "../../services/notificationService";
 
-const ImportantDatesManager = () => {
-  const [dates, setDates] = useState([]);
+const FeeStructureManager = ({ refreshTimestamp, fetchData }) => {
+  const [feeStructures, setFeeStructures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [currentDate, setCurrentDate] = useState(null);
+  const [currentFee, setCurrentFee] = useState(null);
   const [formData, setFormData] = useState({
-    eventName: "",
-    startDate: "",
-    endDate: "",
+    className: "",
+    admissionFee: "",
+    annualFee: "",
+    monthlyFee: "",
   });
 
   useEffect(() => {
-    fetchImportantDates();
-  }, []);
+    fetchFeeStructures();
+  }, [refreshTimestamp]);
 
-  const fetchImportantDates = async () => {
+  const fetchFeeStructures = async () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getImportantDates();
-      setDates(data);
+      const data = await getFeeStructure();
+      setFeeStructures(data);
     } catch (err) {
-      console.error("Error fetching important dates:", err);
-      setError("Failed to load important dates. Please try again.");
+      console.error("Error fetching fee structures:", err);
+      setError("Failed to load fee structures. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleShowModal = (date = null) => {
-    if (date) {
-      setCurrentDate(date);
+  const handleShowModal = (fee = null) => {
+    if (fee) {
+      setCurrentFee(fee);
       setFormData({
-        eventName: date.event_name || "",
-        startDate: date.start_date || "",
-        endDate: date.end_date || "",
+        className: fee.class_name || "",
+        admissionFee: fee.admission_fee || "",
+        annualFee: fee.annual_fee || "",
+        monthlyFee: fee.monthly_fee || "",
       });
     } else {
-      setCurrentDate(null);
+      setCurrentFee(null);
       setFormData({
-        eventName: "",
-        startDate: "",
-        endDate: "",
+        className: "",
+        admissionFee: "",
+        annualFee: "",
+        monthlyFee: "",
       });
     }
     setShowModal(true);
@@ -69,11 +74,12 @@ const ImportantDatesManager = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setCurrentDate(null);
+    setCurrentFee(null);
     setFormData({
-      eventName: "",
-      startDate: "",
-      endDate: "",
+      className: "",
+      admissionFee: "",
+      annualFee: "",
+      monthlyFee: "",
     });
   };
 
@@ -90,60 +96,52 @@ const ImportantDatesManager = () => {
     try {
       setError("");
 
-      const dateData = {
-        eventName: formData.eventName,
-        startDate: formData.startDate,
-        endDate: formData.endDate || null,
+      const feeData = {
+        className: formData.className,
+        admissionFee: parseFloat(formData.admissionFee) || 0,
+        annualFee: parseFloat(formData.annualFee) || 0,
+        monthlyFee: parseFloat(formData.monthlyFee) || 0,
       };
 
-      if (currentDate) {
-        // Update existing date
-        await updateImportantDate(currentDate.id, dateData);
+      if (currentFee) {
+        // Update existing fee structure
+        await updateFeeStructure(currentFee.id, feeData);
+        // Send notification for updated fee structure
+        await sendFeeStructureNotification("update");
       } else {
-        // Add new date
-        await addImportantDate(dateData);
+        // Add new fee structure
+        await addFeeStructure(feeData);
+        // Send notification for new fee structure
+        await sendFeeStructureNotification("add");
       }
 
       handleCloseModal();
-      fetchImportantDates();
+      fetchFeeStructures();
     } catch (err) {
-      console.error("Error saving important date:", err);
-      setError("Failed to save important date. Please try again.");
+      console.error("Error saving fee structure:", err);
+      setError("Failed to save fee structure. Please try again.");
     }
   };
 
   const handleDelete = async (id) => {
-    if (
-      window.confirm("Are you sure you want to delete this important date?")
-    ) {
+    if (window.confirm("Are you sure you want to delete this fee structure?")) {
       try {
         setError("");
-        await deleteImportantDate(id);
-        fetchImportantDates();
+        await deleteFeeStructure(id);
+        fetchFeeStructures();
       } catch (err) {
-        console.error("Error deleting important date:", err);
-        setError("Failed to delete important date. Please try again.");
+        console.error("Error deleting fee structure:", err);
+        setError("Failed to delete fee structure. Please try again.");
       }
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const formatDateRange = (startDate, endDate) => {
-    if (!startDate) return "";
-
-    const start = formatDate(startDate);
-
-    if (endDate) {
-      const end = formatDate(endDate);
-      return `${start} - ${end}`;
-    }
-
-    return start;
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
@@ -151,9 +149,9 @@ const ImportantDatesManager = () => {
       <Row className="mb-4">
         <Col xs={12}>
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <h3 className="mb-0">Important Dates Management</h3>
+            <h3 className="mb-0">Fee Structure Management</h3>
             <Button variant="primary" onClick={() => handleShowModal()}>
-              Add New Event
+              Add New Class
             </Button>
           </div>
         </Col>
@@ -180,31 +178,33 @@ const ImportantDatesManager = () => {
                   <Table striped bordered hover responsive className="mb-0">
                     <thead>
                       <tr>
-                        <th>Event</th>
-                        <th>Date Range</th>
+                        <th>Class</th>
+                        <th>Admission Fee</th>
+                        <th>Annual Fee</th>
+                        <th>Monthly Fee</th>
                         <th className="text-end">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {dates.map((date) => (
-                        <tr key={date.id}>
-                          <td>{date.event_name}</td>
-                          <td>
-                            {formatDateRange(date.start_date, date.end_date)}
-                          </td>
+                      {feeStructures.map((fee) => (
+                        <tr key={fee.id}>
+                          <td>{fee.class_name}</td>
+                          <td>{formatCurrency(fee.admission_fee)}</td>
+                          <td>{formatCurrency(fee.annual_fee)}</td>
+                          <td>{formatCurrency(fee.monthly_fee)}</td>
                           <td>
                             <div className="d-flex justify-content-end gap-2">
                               <Button
                                 variant="outline-primary"
                                 size="sm"
-                                onClick={() => handleShowModal(date)}
+                                onClick={() => handleShowModal(fee)}
                               >
                                 Edit
                               </Button>
                               <Button
                                 variant="outline-danger"
                                 size="sm"
-                                onClick={() => handleDelete(date.id)}
+                                onClick={() => handleDelete(fee.id)}
                               >
                                 Delete
                               </Button>
@@ -212,10 +212,10 @@ const ImportantDatesManager = () => {
                           </td>
                         </tr>
                       ))}
-                      {dates.length === 0 && (
+                      {feeStructures.length === 0 && (
                         <tr>
-                          <td colSpan="3" className="text-center py-3">
-                            No important dates found. Add a new event to get
+                          <td colSpan="5" className="text-center py-3">
+                            No fee structures found. Add a new class to get
                             started.
                           </td>
                         </tr>
@@ -229,21 +229,21 @@ const ImportantDatesManager = () => {
         </Col>
       </Row>
 
-      {/* Modal for Add/Edit Important Date */}
+      {/* Modal for Add/Edit Fee Structure */}
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>
-            {currentDate ? "Edit Important Date" : "Add New Important Date"}
+            {currentFee ? "Edit Fee Structure" : "Add New Fee Structure"}
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Form.Group className="mb-3">
-              <Form.Label>Event Name</Form.Label>
+              <Form.Label>Class Name</Form.Label>
               <Form.Control
                 type="text"
-                name="eventName"
-                value={formData.eventName}
+                name="className"
+                value={formData.className}
                 onChange={handleChange}
                 required
               />
@@ -252,28 +252,43 @@ const ImportantDatesManager = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Start Date</Form.Label>
+                  <Form.Label>Admission Fee (₹)</Form.Label>
                   <Form.Control
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
+                    type="number"
+                    name="admissionFee"
+                    value={formData.admissionFee}
                     onChange={handleChange}
-                    required
+                    min="0"
+                    step="0.01"
                   />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>End Date (Optional)</Form.Label>
+                  <Form.Label>Annual Fee (₹)</Form.Label>
                   <Form.Control
-                    type="date"
-                    name="endDate"
-                    value={formData.endDate}
+                    type="number"
+                    name="annualFee"
+                    value={formData.annualFee}
                     onChange={handleChange}
+                    min="0"
+                    step="0.01"
                   />
                 </Form.Group>
               </Col>
             </Row>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Monthly Fee (₹)</Form.Label>
+              <Form.Control
+                type="number"
+                name="monthlyFee"
+                value={formData.monthlyFee}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+              />
+            </Form.Group>
           </Modal.Body>
           <Modal.Footer className="flex-column flex-md-row gap-2">
             <Button
@@ -284,7 +299,7 @@ const ImportantDatesManager = () => {
               Cancel
             </Button>
             <Button variant="primary" type="submit" className="w-100 w-md-auto">
-              {currentDate ? "Update" : "Save"} Event
+              {currentFee ? "Update" : "Save"} Fee Structure
             </Button>
           </Modal.Footer>
         </Form>
@@ -293,4 +308,4 @@ const ImportantDatesManager = () => {
   );
 };
 
-export default ImportantDatesManager;
+export default FeeStructureManager;

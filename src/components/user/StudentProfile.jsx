@@ -24,7 +24,7 @@ import {
   isSessionInPast, // Import the new function
   deleteStudent,
   getStudentClasses, // Import to check for roll number conflicts
-} from "../services/classStudentService";
+} from "../../services/classStudentService";
 import UpdateHistory from "./UpdateHistory";
 
 const StudentProfile = ({ student, onBack, onUpdate }) => {

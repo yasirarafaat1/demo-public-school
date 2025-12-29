@@ -1,5 +1,5 @@
 import React from "react";
-import StudentFees from "../components/StudentFees";
+import StudentFees from "../components/user/StudentFees";
 
 const StudentFeesPage = () => {
   return (

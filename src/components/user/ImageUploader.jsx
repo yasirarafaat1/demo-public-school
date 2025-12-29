@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getPlaceholderImage } from "../utils/imageUtils";
+import { getPlaceholderImage } from "../../utils/imageUtils";
 
 const ImageUploader = ({
   onImageSelect,

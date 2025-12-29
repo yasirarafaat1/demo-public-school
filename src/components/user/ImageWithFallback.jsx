@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getPlaceholderImage } from "../utils/imageUtils";
+import { getPlaceholderImage } from "../../utils/imageUtils";
 
 const ImageWithFallback = ({
   src,

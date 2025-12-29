@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { FaThumbtack, FaCalendarAlt } from "react-icons/fa";
-import { getNotices } from "../services/supabaseService";
-import styles from "../styles/NoticeBoard.module.css";
+import { getNotices } from "../../services/supabaseService";
+import styles from "../../styles/NoticeBoard.module.css";
 
 const NoticeBoard = () => {
   const [notices, setNotices] = useState([]);

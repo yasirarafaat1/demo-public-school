@@ -12,7 +12,7 @@ import {
 } from "react-bootstrap";
 import { getResultById, updateResult } from "../services/resultService";
 import { getClasses } from "../services/classStudentService";
-import SkeletonLoader from "../components/SkeletonLoader";
+import SkeletonLoader from "../components/user/SkeletonLoader";
 
 const EditResult = () => {
   const navigate = useNavigate();

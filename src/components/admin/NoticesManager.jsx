@@ -17,7 +17,8 @@ import {
   addNotice,
   updateNotice,
   deleteNotice,
-} from "../services/supabaseService";
+} from "../../services/supabaseService";
+import { sendNoticeNotification } from "../../services/notificationService";
 
 const NoticesManager = () => {
   const [notices, setNotices] = useState([]);
@@ -105,9 +106,13 @@ const NoticesManager = () => {
       if (currentNotice) {
         // Update existing notice
         await updateNotice(currentNotice.id, noticeData);
+        // Send notification for updated notice
+        await sendNoticeNotification("update", formData.title);
       } else {
         // Add new notice
         await addNotice(noticeData);
+        // Send notification for new notice
+        await sendNoticeNotification("add", formData.title);
       }
 
       handleCloseModal();

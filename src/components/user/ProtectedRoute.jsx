@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Spinner } from "react-bootstrap"; // For loading state
-import { supabase } from "../services/supabaseService";
+import { supabase } from "../../services/supabaseService";
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

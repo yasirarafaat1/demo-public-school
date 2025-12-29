@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getUpdateHistory } from "../services/supabaseService";
+import { getUpdateHistory } from "../../services/supabaseService";
 import { Card, Table, Spinner, Alert, Form } from "react-bootstrap";
 
 const UpdateHistory = ({ tableName, recordId }) => {

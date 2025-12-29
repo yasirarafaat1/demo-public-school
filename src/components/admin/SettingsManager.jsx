@@ -15,7 +15,7 @@ import {
   addStaffMember,
   updateStaffMember,
   deleteStaffMember,
-} from "../services/adminService";
+} from "../../services/adminService";
 import StaffManager from "./StaffManager";
 
 const SettingsManager = () => {

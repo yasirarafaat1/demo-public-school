@@ -7,7 +7,7 @@ import {
   getSessions,
   addSession,
   updateSession,
-} from "../services/classStudentService";
+} from "../../services/classStudentService";
 import {
   Container,
   Row,

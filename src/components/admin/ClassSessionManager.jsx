@@ -36,9 +36,9 @@ import {
   deleteClass,
   addSession,
   updateSession,
-} from "../services/classStudentService";
-import StudentProfile from "./StudentProfile";
-import SkeletonLoader from "./SkeletonLoader";
+} from "../../services/classStudentService";
+import StudentProfile from "../user/StudentProfile";
+import SkeletonLoader from "../user/SkeletonLoader";
 
 const ClassSessionManager = ({ refreshTimestamp }) => {
   const navigate = useNavigate();

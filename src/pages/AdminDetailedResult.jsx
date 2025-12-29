@@ -12,7 +12,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { getAllResults, deleteResult } from "../services/resultService";
-import SkeletonLoader from "../components/SkeletonLoader";
+import SkeletonLoader from "../components/user/SkeletonLoader";
 
 const AdminDetailedResult = () => {
   const navigate = useNavigate();

@@ -26,21 +26,30 @@ import AdmissionEnquiry from "./pages/AdmissionEnquiry";
 import DeveloperInfo from "./pages/DeveloperInfo";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
-import ProtectedRoute from "./components/ProtectedRoute";
-import SettingsManager from "./components/SettingsManager";
+import ProtectedRoute from "./components/user/ProtectedRoute";
+import SettingsManager from "./components/admin/SettingsManager";
 import Result from "./pages/Result";
 import AdminDetailedResult from "./pages/AdminDetailedResult";
 import EditResult from "./pages/EditResult";
 import AddResult from "./pages/AddResult";
-import ClassSessionManager from "./components/ClassSessionManager";
+import ClassSessionManager from "./components/admin/ClassSessionManager";
 import ClassStudentsView from "./pages/ClassStudentsView";
 import StudentFeesPage from "./pages/StudentFeesPage";
+import { trackVisitor } from "./services/supabaseService";
+import { requestNotificationPermission } from "./services/notificationService";
 
 // Layout component to conditionally render Nav and Footer
 const AppLayout = () => {
   const location = useLocation();
 
   const hideNavFooter = location.pathname.startsWith("/admin");
+
+  // Track visitor on page load (except for admin pages)
+  useEffect(() => {
+    if (!hideNavFooter) {
+      trackVisitor();
+    }
+  }, [location.pathname, hideNavFooter]);
 
   return (
     <>
@@ -131,6 +140,9 @@ export default function App() {
       duration: 1000,
       once: true,
     });
+
+    // Request notification permission when the app loads
+    requestNotificationPermission();
   }, []);
 
   return (

@@ -24,8 +24,8 @@ import {
   getUniqueStudentResults,
   updateResult,
   deleteResult,
-} from "../services/resultService";
-import SkeletonLoader from "./SkeletonLoader";
+} from "../../services/resultService";
+import SkeletonLoader from "../user/SkeletonLoader";
 
 const ResultManager = ({ refreshTimestamp }) => {
   const navigate = useNavigate();

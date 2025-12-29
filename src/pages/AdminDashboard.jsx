@@ -48,16 +48,17 @@ import {
   FaSort,
   FaChevronDown,
 } from "react-icons/fa";
-import GalleryManager from "../components/GalleryManager";
-import StaffManager from "../components/StaffManager";
-import FeeStructureManager from "../components/FeeStructureManager";
-import ImportantDatesManager from "../components/ImportantDatesManager";
-import NoticesManager from "../components/NoticesManager";
-import ResultManager from "../components/ResultManager";
-import ClassManager from "../components/ClassManager";
-import StudentManager from "../components/StudentManager";
-import ClassSessionManager from "../components/ClassSessionManager";
-import FeesManagement from "../components/FeesManagement";
+import GalleryManager from "../components/admin/GalleryManager";
+import StaffManager from "../components/admin/StaffManager";
+import FeeStructureManager from "../components/admin/FeeStructureManager";
+import ImportantDatesManager from "../components/admin/ImportantDatesManager";
+import NoticesManager from "../components/admin/NoticesManager";
+import ResultManager from "../components/admin/ResultManager";
+import ClassManager from "../components/admin/ClassManager";
+import StudentManager from "../components/admin/StudentManager";
+import ClassSessionManager from "../components/admin/ClassSessionManager";
+import FeesManagement from "../components/admin/FeesManagement";
+import VisitorAnalytics from "../components/admin/VisitorAnalytics";
 import styles from "../styles/AdminDashboard.module.css";
 
 const AdminDashboard = () => {
@@ -686,240 +687,8 @@ const AdminDashboard = () => {
                   </Row>
 
                   {/* Collapsible Data Panels */}
-                  <Card className="mb-3">
-                    <Card.Header
-                      className={styles.panelHeader}
-                      onClick={() => togglePanel("admissions")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0">Recent Admission Enquiries</h5>
-                        <div>
-                          <span className="badge bg-primary me-2">
-                            {admissions.length}
-                          </span>
-                          {openPanels.admissions ? (
-                            <FaChevronDown />
-                          ) : (
-                            <FaChevronRight />
-                          )}
-                        </div>
-                      </div>
-                    </Card.Header>
-                    <Collapse in={openPanels.admissions}>
-                      <div>
-                        <Card.Body>
-                          {admissions.length > 0 ? (
-                            <div className={styles.tableContainer}>
-                              <Table
-                                striped
-                                bordered
-                                hover
-                                responsive
-                                size="sm"
-                              >
-                                <thead>
-                                  <tr>
-                                    <th>Student Name</th>
-                                    <th>Class</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {admissions.slice(0, 5).map((admission) => (
-                                    <tr key={admission.id}>
-                                      <td>{admission.student_name}</td>
-                                      <td>{admission.class_interested}</td>
-                                      <td>
-                                        {formatDate(admission.submitted_at)}
-                                      </td>
-                                      <td>
-                                        <span className="badge bg-info">
-                                          New
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </Table>
-                              {admissions.length > 5 && (
-                                <div className="text-center mt-3">
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => setActiveTab("admissions")}
-                                  >
-                                    View All Enquiries
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="text-muted text-center">
-                              No admission enquiries found.
-                            </p>
-                          )}
-                        </Card.Body>
-                      </div>
-                    </Collapse>
-                  </Card>
 
-                  <Card className="mb-3">
-                    <Card.Header
-                      className={styles.panelHeader}
-                      onClick={() => togglePanel("contacts")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0">Recent Contact Forms</h5>
-                        <div>
-                          <span className="badge bg-primary me-2">
-                            {contacts.length}
-                          </span>
-                          {openPanels.contacts ? (
-                            <FaChevronDown />
-                          ) : (
-                            <FaChevronRight />
-                          )}
-                        </div>
-                      </div>
-                    </Card.Header>
-                    <Collapse in={openPanels.contacts}>
-                      <div>
-                        <Card.Body>
-                          {contacts.length > 0 ? (
-                            <div className={styles.tableContainer}>
-                              <Table
-                                striped
-                                bordered
-                                hover
-                                responsive
-                                size="sm"
-                              >
-                                <thead>
-                                  <tr>
-                                    <th>Name</th>
-                                    <th>Subject</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {contacts.slice(0, 5).map((contact) => (
-                                    <tr key={contact.id}>
-                                      <td>{contact.name}</td>
-                                      <td>{contact.subject}</td>
-                                      <td>
-                                        {formatDate(contact.submitted_at)}
-                                      </td>
-                                      <td>
-                                        <span className="badge bg-warning">
-                                          Pending
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </Table>
-                              {contacts.length > 5 && (
-                                <div className="text-center mt-3">
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => setActiveTab("contacts")}
-                                  >
-                                    View All Contacts
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="text-muted text-center">
-                              No contact forms found.
-                            </p>
-                          )}
-                        </Card.Body>
-                      </div>
-                    </Collapse>
-                  </Card>
-
-                  <Card className="mb-3">
-                    <Card.Header
-                      className={styles.panelHeader}
-                      onClick={() => togglePanel("staff")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0">Staff Members</h5>
-                        <div>
-                          <span className="badge bg-primary me-2">
-                            {staff.length}
-                          </span>
-                          {openPanels.staff ? (
-                            <FaChevronDown />
-                          ) : (
-                            <FaChevronRight />
-                          )}
-                        </div>
-                      </div>
-                    </Card.Header>
-                    <Collapse in={openPanels.staff}>
-                      <div>
-                        <Card.Body>
-                          {staff.length > 0 ? (
-                            <div className={styles.tableContainer}>
-                              <Table
-                                striped
-                                bordered
-                                hover
-                                responsive
-                                size="sm"
-                              >
-                                <thead>
-                                  <tr>
-                                    <th>Name</th>
-                                    <th>Role</th>
-                                    <th>Email</th>
-                                    <th>Status</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {staff.slice(0, 5).map((member) => (
-                                    <tr key={member.id}>
-                                      <td>{member.name}</td>
-                                      <td>{member.role}</td>
-                                      <td>{member.email}</td>
-                                      <td>
-                                        <span className="badge bg-success">
-                                          Active
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </Table>
-                              {staff.length > 5 && (
-                                <div className="text-center mt-3">
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => setActiveTab("staff")}
-                                  >
-                                    View All Staff
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="text-muted text-center">
-                              No staff members found.
-                            </p>
-                          )}
-                        </Card.Body>
-                      </div>
-                    </Collapse>
-                  </Card>
+                  <VisitorAnalytics />
                 </div>
               )}
 

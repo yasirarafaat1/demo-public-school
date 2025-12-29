@@ -15,10 +15,11 @@ import {
   addGalleryImage,
   removeGalleryImage,
   uploadFile,
-} from "../services/supabaseService";
+} from "../../services/supabaseService";
 import { FaChevronDown, FaChevronRight, FaTrash, FaPlus } from "react-icons/fa";
-import Toast from "./Toast";
-import styles from "../styles/Gallery.module.css";
+import Toast from "../user/Toast";
+import styles from "../../styles/Gallery.module.css";
+import { sendGalleryNotification } from "../../services/notificationService";
 
 const GalleryManager = ({ refreshTimestamp }) => {
   const [categories, setCategories] = useState([]);
@@ -159,6 +160,9 @@ const GalleryManager = ({ refreshTimestamp }) => {
       setSelectedCategory("");
       setNewCategory("");
       showToast("Image uploaded successfully!", "success");
+
+      // Send notification for new gallery images
+      await sendGalleryNotification("add");
     } catch (err) {
       console.error("Error uploading image:", err);
       showToast("Failed to upload image: " + err.message, "error");
@@ -180,6 +184,9 @@ const GalleryManager = ({ refreshTimestamp }) => {
       // Refresh categories
       const categoriesData = await getGalleryImages();
       setCategories(categoriesData);
+
+      // Send notification for updated gallery
+      await sendGalleryNotification("update");
     } catch (err) {
       console.error("Error deleting image:", err);
       showToast("Failed to delete image: " + err.message, "error");
@@ -209,6 +216,9 @@ const GalleryManager = ({ refreshTimestamp }) => {
       // Refresh categories
       const categoriesData = await getGalleryImages();
       setCategories(categoriesData);
+
+      // Send notification for updated gallery
+      await sendGalleryNotification("update");
     } catch (err) {
       console.error("Error deleting category:", err);
       showToast("Failed to delete category: " + err.message, "error");

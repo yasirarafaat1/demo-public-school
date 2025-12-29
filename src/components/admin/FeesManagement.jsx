@@ -12,9 +12,9 @@ import {
   Tab,
   Nav,
 } from "react-bootstrap";
-import { getStudentsWithFeesForCurrentSession } from "../services/feeService";
-import { getClasses, getSessions } from "../services/classStudentService";
-import SkeletonLoader from "./SkeletonLoader";
+import { getStudentsWithFeesForCurrentSession } from "../../services/feeService";
+import { getClasses, getSessions } from "../../services/classStudentService";
+import SkeletonLoader from "../user/SkeletonLoader";
 import { useNavigate } from "react-router-dom";
 import AddStudentFees from "./AddStudentFees";
 

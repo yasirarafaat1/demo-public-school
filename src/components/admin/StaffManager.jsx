@@ -33,9 +33,10 @@ import {
   addStaffMember,
   updateStaffMember,
   deleteStaffMember,
-} from "../services/adminService";
-import { supabase } from "../services/supabaseService";
-import UpdateHistory from "./UpdateHistory";
+} from "../../services/adminService";
+import { supabase } from "../../services/supabaseService";
+import UpdateHistory from "../user/UpdateHistory";
+import { sendStaffNotification } from "../../services/notificationService";
 
 const StaffManager = ({ refreshTimestamp, fetchData }) => {
   const [staff, setStaff] = useState([]);
@@ -321,9 +322,13 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
       if (editingId) {
         await updateStaffMember(editingId, staffData);
         setSuccess("Staff member updated successfully.");
+        // Send notification for updated staff member
+        await sendStaffNotification("update", formData.name);
       } else {
         await addStaffMember(staffData);
         setSuccess("Staff member added successfully.");
+        // Send notification for new staff member
+        await sendStaffNotification("add", formData.name);
       }
 
       setShowModal(false);
@@ -1117,7 +1122,11 @@ const StaffManager = ({ refreshTimestamp, fetchData }) => {
           <Card.Header>
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Staff Member History</h5>
-              <Button variant="outline-secondary" size="sm" onClick={closeHistoryView}>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={closeHistoryView}
+              >
                 <FaArrowLeft className="me-1" /> Back to List
               </Button>
             </div>

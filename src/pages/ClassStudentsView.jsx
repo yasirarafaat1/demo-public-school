@@ -18,7 +18,7 @@ import {
   getStudents,
   getSessions,
 } from "../services/classStudentService";
-import StudentProfile from "../components/StudentProfile";
+import StudentProfile from "../components/user/StudentProfile";
 
 const ClassStudentsView = () => {
   const navigate = useNavigate();

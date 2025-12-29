@@ -23,7 +23,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import ErrorBoundary from "../components/ErrorBoundary";
+import ErrorBoundary from "../components/user/ErrorBoundary";
 import styles from "../styles/Admission.module.css";
 
 gsap.registerPlugin(ScrollTrigger);

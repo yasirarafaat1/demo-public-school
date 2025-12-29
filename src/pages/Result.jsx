@@ -16,7 +16,7 @@ import { getResultByRollNoAndClassCode } from "../services/resultService";
 import { getStudentByRollNumberAndClassCode } from "../services/classStudentService";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import SkeletonLoader from "../components/SkeletonLoader";
+import SkeletonLoader from "../components/user/SkeletonLoader";
 
 
 const Result = () => {
