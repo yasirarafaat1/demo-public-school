@@ -55,6 +55,48 @@ const AddResult = () => {
     loadExistingResults();
   }, []);
 
+  // Function to check for existing exam types for a specific student
+  const checkExistingExamTypes = async (rollNo, classCode) => {
+    try {
+      console.log('Checking existing exam types using cached data:', { rollNo, classCode });
+      
+      // Use cached data only to avoid 406 errors
+      const cachedExamTypes = existingResults
+        .filter(
+          (r) =>
+            r.roll_no === rollNo && r.class_code === classCode
+        )
+        .map((r) => r.exam_type);
+      
+      console.log('Found cached exam types:', cachedExamTypes);
+      return cachedExamTypes;
+    } catch (err) {
+      console.error('Error in checkExistingExamTypes:', err);
+      return [];
+    }
+  };
+
+  // Function to check if specific exam type exists
+  const checkExamTypeExists = async (rollNo, classCode, examType) => {
+    try {
+      console.log('Checking exam type existence using cached data:', { rollNo, classCode, examType });
+      
+      // Use cached data only to avoid 406 errors
+      const cachedResult = existingResults.find(
+        (r) =>
+          r.roll_no === rollNo &&
+          r.class_code === classCode &&
+          r.exam_type === examType
+      );
+      
+      console.log('Found cached result:', cachedResult);
+      return !!cachedResult;
+    } catch (err) {
+      console.error('Error in checkExamTypeExists:', err);
+      return false;
+    }
+  };
+
   // Effect to fetch student info when shouldFetchStudent is true
   useEffect(() => {
     if (shouldFetchStudent && formData.roll_no && formData.class_code) {
@@ -89,7 +131,7 @@ const AddResult = () => {
 
     setFetchingStudent(true);
     try {
-      // First try to find in existing results
+      // First try to find in existing results (this avoids Supabase queries)
       const resultsForStudent = existingResults.filter(
         (r) => r.roll_no === rollNo && r.class_code === classCode
       );
@@ -103,7 +145,8 @@ const AddResult = () => {
         }));
         setStudentNotFound(false);
       } else {
-        // If not found in results, try to fetch from student_classes table
+        // Only call the external service if we don't have the data cached
+        console.log('Student not found in cached results, calling external service...');
         const studentInfo = await getStudentByRollNumberAndClassCode(
           rollNo,
           classCode
@@ -183,27 +226,26 @@ const AddResult = () => {
         );
       }
 
-      // Check if exam type already exists for this student and class
-      const existingResult = existingResults.find(
-        (r) =>
-          r.roll_no === formData.roll_no &&
-          r.class_code === formData.class_code &&
-          r.exam_type === formData.exam_type
+      // Check if exam type already exists for this student and class (using direct query)
+      const examTypeExists = await checkExamTypeExists(
+        formData.roll_no,
+        formData.class_code,
+        formData.exam_type
       );
 
-      if (existingResult) {
+      if (examTypeExists) {
         throw new Error(
           `Result for exam type "${formData.exam_type}" already exists for this student and class. Please edit the existing result instead.`
         );
       }
 
-      // Check if there are already 3 exam types for this roll number and class code
-      const existingExamTypes = existingResults.filter(
-        (r) =>
-          r.roll_no === formData.roll_no && r.class_code === formData.class_code
+      // Check if there are already 3 exam types for this roll number and class code (using direct query)
+      const existingExamTypesForStudent = await checkExistingExamTypes(
+        formData.roll_no,
+        formData.class_code
       );
 
-      if (existingExamTypes.length >= 3) {
+      if (existingExamTypesForStudent.length >= 3) {
         throw new Error(
           `Maximum 3 exam types allowed for roll number ${formData.roll_no} and class code ${formData.class_code}. Cannot add more.`
         );
@@ -254,9 +296,16 @@ const AddResult = () => {
     }
   };
 
-  // Get existing exam types for current roll number and class code
-  const getExistingExamTypes = () => {
-    if (!formData.roll_no || !formData.class_code) return [];
+  // Get existing exam types for the current student (using direct query)
+  const getExistingExamTypes = async () => {
+    if (!formData.roll_no || !formData.class_code) {
+      return [];
+    }
+    return await checkExistingExamTypes(formData.roll_no, formData.class_code);
+  };
+
+  // Get existing exam types for the current student (using cached data)
+  const getCachedExistingExamTypes = () => {
     return existingResults
       .filter(
         (r) =>
@@ -269,17 +318,25 @@ const AddResult = () => {
   const getAvailableExamTypes = () => {
     if (!formData.roll_no || !formData.class_code) {
       // Return common exam types if no roll/class info yet
-      return ["Quarterly", "Half-yearly", "Annual"];
+      return ["Quarterly", "Half-Yearly", "Annual"];
     }
 
-    const existingExamTypes = getExistingExamTypes();
-    const allPossibleTypes = ["Quarterly", "Half-yearly", "Annual"];
+    const existingExamTypes = getCachedExistingExamTypes(); // Use cached version for UI
+    const allPossibleTypes = ["Quarterly", "Half-Yearly", "Annual"];
 
     // Filter out existing exam types to only show available ones
-    return allPossibleTypes.filter((type) => !existingExamTypes.includes(type));
+    // Handle both "Quarterly" and "Quaterly" spellings for compatibility
+    return allPossibleTypes.filter((type) => {
+      const normalizedType = type.toLowerCase();
+      return !existingExamTypes.some(existing => 
+        existing.toLowerCase() === normalizedType || 
+        (existing.toLowerCase() === "quaterly" && normalizedType === "quarterly") ||
+        (existing.toLowerCase() === "quarterly" && normalizedType === "quaterly")
+      );
+    });
   };
 
-  const existingExamTypes = getExistingExamTypes();
+  const existingExamTypes = getCachedExistingExamTypes(); // Use cached version for UI
   const availableExamTypes = getAvailableExamTypes();
 
   return (
@@ -445,7 +502,7 @@ const AddResult = () => {
                     value={formData.exam_type}
                     onChange={handleInputChange}
                     required
-                    disabled={studentNotFound} // Disable if student not found
+                    disabled={studentNotFound || availableExamTypes.length === 0} // Disable if student not found or no exam types available
                   >
                     <option value="">Select an exam type</option>
                     {availableExamTypes.length > 0 ? (
@@ -456,16 +513,43 @@ const AddResult = () => {
                       ))
                     ) : (
                       <option value="">
-                        No available exam types (max 3 already used)
+                        {existingExamTypes.length > 0 
+                          ? `All exam types already used (${existingExamTypes.join(', ')})`
+                          : 'No exam types available'
+                        }
                       </option>
                     )}
                   </Form.Select>
                   <Form.Text className="text-muted">
-                    {existingExamTypes.length >= 3
-                      ? "Maximum 3 exam types already exist for this roll number and class code."
-                      : `You can add ${
-                          3 - existingExamTypes.length
-                        } more exam type(s) for this roll number and class code.`}
+                    {existingExamTypes.length >= 3 ? (
+                      <div>
+                        <strong>Maximum 3 exam types already exist for this student:</strong>
+                        <br />
+                        {existingExamTypes.map((type, index) => (
+                          <span key={index} className="badge bg-secondary me-1 mb-1">
+                            {type}
+                          </span>
+                        ))}
+                        <br />
+                        <small className="text-danger">
+                          To add a new exam type, please delete an existing result first.
+                        </small>
+                      </div>
+                    ) : (
+                      <div>
+                        You can add {3 - existingExamTypes.length} more exam type(s) for this student.
+                        {existingExamTypes.length > 0 && (
+                          <div className="mt-1">
+                            <small>Existing exam types: </small>
+                            {existingExamTypes.map((type, index) => (
+                              <span key={index} className="badge bg-info me-1">
+                                {type}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </Form.Text>
                 </Form.Group>
 

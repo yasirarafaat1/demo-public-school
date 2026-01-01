@@ -1,34 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { Spinner } from "react-bootstrap"; // For loading state
-import { supabase } from "../../services/supabaseService";
+import { Spinner } from "react-bootstrap";
+import { isAdminSessionValid } from "../../utils/sessionManager";
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Start in loading state
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+    // Check if admin session is valid
+    const checkAuth = () => {
+      const isValid = isAdminSessionValid();
+      setIsAuthenticated(isValid);
       setIsLoading(false);
     };
 
     checkAuth();
 
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
+    // Set up interval to check session expiration every minute
+    const interval = setInterval(checkAuth, 60000);
 
-    // Cleanup subscription on unmount
-    return () => subscription.unsubscribe();
-  }, []); // Run only once on mount
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, []);
 
   if (isLoading) {
     // Show a loading indicator while checking auth state

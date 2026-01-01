@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Spinner, Alert } from "react-bootstrap";
+import { Card, Row, Col, Spinner, Alert, Form } from "react-bootstrap";
 import {
   FaUsers,
   FaEye,
   FaUserClock,
   FaUserPlus,
   FaChartLine,
+  FaDownload,
+  FaFileExport,
+  FaSync,
 } from "react-icons/fa";
 import {
   LineChart,
@@ -29,6 +32,11 @@ const VisitorAnalytics = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endDate: new Date()
+  });
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchAnalytics();
@@ -41,11 +49,93 @@ const VisitorAnalytics = () => {
       const data = await getVisitorStatistics();
       setAnalytics(data);
     } catch (err) {
-      console.error("Error fetching visitor analytics:", err);
       setError("Failed to load visitor analytics. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Export functionality
+  const exportAnalytics = async (format = 'csv') => {
+    setExporting(true);
+    try {
+      const data = await getVisitorStatistics();
+      
+      if (format === 'csv') {
+        // Create CSV content
+        const headers = ['Date', 'Total Visitors', 'New Visitors', 'Return Visitors'];
+        const rows = analytics.dailyStats.map(stat => [
+          stat.date,
+          stat.totalVisitors || 0,
+          stat.newVisitors || 0,
+          stat.returnVisitors || 0
+        ]);
+        
+        const csvContent = [headers, ...rows]
+          .map(row => row.join(','))
+          .join('\n');
+        
+        // Download CSV
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `visitor-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } else if (format === 'json') {
+        // Download JSON
+        const jsonContent = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `visitor-analytics-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      setError('Failed to export analytics. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Handle date range change
+  const handleDateRangeChange = (field, value) => {
+    const newDateRange = { ...dateRange, [field]: value };
+    setDateRange(newDateRange);
+    
+    // Fetch analytics with new date range
+    fetchAnalyticsWithDateRange(newDateRange);
+  };
+
+  const fetchAnalyticsWithDateRange = async (range) => {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await getVisitorStatistics();
+      // Filter data based on date range (this would need backend support)
+      setAnalytics(data);
+    } catch (err) {
+      setError("Failed to load visitor analytics. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Quick date range presets
+  const setDateRangePreset = (days) => {
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+    const newRange = { startDate, endDate };
+    setDateRange(newRange);
+    fetchAnalyticsWithDateRange(newRange);
   };
 
   // Prepare chart data for Recharts
@@ -195,14 +285,61 @@ const VisitorAnalytics = () => {
               Visitor Analytics
             </h5>
             <div className="d-flex align-items-center">
-              <small className="text-muted me-3">
-                Last 30 days
-              </small>
+              {/* Date Range Controls */}
+              <div className="d-flex align-items-center me-3">
+                <Form.Control
+                  type="date"
+                  size="sm"
+                  value={dateRange.startDate.toISOString().split('T')[0]}
+                  onChange={(e) => handleDateRangeChange('startDate', new Date(e.target.value))}
+                  className="me-2"
+                  style={{ width: '150px' }}
+                />
+                <span className="me-2">to</span>
+                <Form.Control
+                  type="date"
+                  size="sm"
+                  value={dateRange.endDate.toISOString().split('T')[0]}
+                  onChange={(e) => handleDateRangeChange('endDate', new Date(e.target.value))}
+                  style={{ width: '150px' }}
+                />
+              </div>
+
+              {/* Export Buttons */}
+              <div className="btn-group" role="group">
+                <button 
+                  className="btn btn-sm btn-outline-success"
+                  onClick={() => exportAnalytics('csv')}
+                  disabled={exporting}
+                >
+                  {exporting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <FaDownload className="me-2" />
+                      Export CSV
+                    </>
+                  )}
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline-info"
+                  onClick={() => exportAnalytics('json')}
+                  disabled={exporting}
+                >
+                  <FaFileExport className="me-2" />
+                  Export JSON
+                </button>
+              </div>
+              
               <button
-                className="btn btn-sm btn-outline-primary"
+                className="btn btn-sm btn-outline-primary m-2"
                 onClick={fetchAnalytics}
                 disabled={loading}
               >
+                <FaSync className="me-2 ms-2" />
                 Refresh
               </button>
             </div>

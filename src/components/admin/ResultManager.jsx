@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -24,8 +24,10 @@ import {
   getUniqueStudentResults,
   updateResult,
   deleteResult,
+  getAllResults,
 } from "../../services/resultService";
 import SkeletonLoader from "../user/SkeletonLoader";
+import BulkResultUpload from "./BulkResultUpload";
 
 const ResultManager = ({ refreshTimestamp }) => {
   const navigate = useNavigate();
@@ -41,6 +43,22 @@ const ResultManager = ({ refreshTimestamp }) => {
   const togglePanel = () => {
     setOpenPanel(!openPanel);
   };
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const resultsData = await getAllResults();
+      setResults(resultsData);
+    } catch (err) {
+      console.error("Error fetching results data:", err);
+      setError(
+        "Failed to load results. Please check your connection or permissions."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Handle CSV upload
   const handleCSVUpload = async (e) => {
@@ -101,27 +119,16 @@ const ResultManager = ({ refreshTimestamp }) => {
     navigate("/admin/result/add");
   };
 
+  // Navigate to bulk upload page
+  const navigateToBulkUpload = () => {
+    navigate("/admin/bulk-upload");
+  };
+
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Result Management</h4>
-        <div>
-          <input
-            type="file"
-            accept=".csv"
-            ref={fileInputRef}
-            onChange={handleCSVUpload}
-            style={{ display: "none" }}
-          />
-          <Button
-            variant="outline-primary"
-            onClick={() => fileInputRef.current.click()}
-            disabled={loading}
-            className="me-2"
-          >
-            <FaUpload className="me-2" />
-            Upload Student Data CSV
-          </Button>
+        <div className="d-flex gap-2">
           <Button
             variant="primary"
             onClick={navigateToAddResult}
@@ -130,19 +137,15 @@ const ResultManager = ({ refreshTimestamp }) => {
             <FaPlus className="me-2" />
             Add Result
           </Button>
-        </div>
-      </div>
-      <div className="mb-3">
-        <small className="text-muted">
-          CSV Templates:{" "}
-          <a
-            href="/result_template.csv"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Button
+            variant="success"
+            onClick={navigateToBulkUpload}
+            disabled={loading}
           >
-            Student Data
-          </a>
-        </small>
+            <FaUpload className="me-2" />
+            Bulk Upload
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -157,78 +160,11 @@ const ResultManager = ({ refreshTimestamp }) => {
         </Alert>
       )}
 
+      {/* Bulk Result Upload Component */}
       <Card className="mb-4">
-        <Card.Header
-          onClick={togglePanel}
-          style={{ cursor: "pointer" }}
-          className="d-flex justify-content-between align-items-center"
-        >
-          <span>All Results</span>
-          <div>{openPanel ? <FaChevronDown /> : <FaChevronRight />}</div>
-        </Card.Header>
-        <Collapse in={openPanel}>
-          <div>
-            <Card.Body>
-              {loading ? (
-                <div className="table-responsive">
-                  <Table striped bordered hover>
-                    <thead>
-                      <tr>
-                        <th>Roll No</th>
-                        <th>Student Name</th>
-                        <th>Class Code</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <SkeletonLoader type="table-row" count={5} />
-                    </tbody>
-                  </Table>
-                </div>
-              ) : results.length > 0 ? (
-                <div className="table-responsive">
-                  <Table striped bordered hover>
-                    <thead>
-                      <tr>
-                        <th>Roll No</th>
-                        <th>Student Name</th>
-                        <th>Class Code</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.map((result) => (
-                        <tr
-                          key={
-                            result.id ||
-                            `${result.roll_no}-${result.class_code}`
-                          }
-                          onClick={() => navigateToResultDetail(result)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <td>{result.roll_no}</td>
-                          <td>{result.student_name}</td>
-                          <td>{result.class_code}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <p>
-                    No results found. Upload a CSV file or add results manually.
-                  </p>
-                  <p className="text-muted">
-                    <small>
-                      Note: For CSV uploads, first import student data, then add
-                      subjects and marks using the admin panel or separate
-                      subjects CSV.
-                    </small>
-                  </p>
-                </div>
-              )}
-            </Card.Body>
-          </div>
-        </Collapse>
+        <Card.Body>
+          <BulkResultUpload onUploadSuccess={fetchData} />
+        </Card.Body>
       </Card>
     </>
   );

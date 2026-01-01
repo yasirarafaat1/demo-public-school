@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://sspublicschool.vercel.app/sitemap.xml
+
+# Block admin pages from indexing
+Disallow: /admin/
+
+# Block development files
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /src/
+Disallow: /node_modules/
+
+# Allow specific JS/CSS files for SEO
+Allow: /static/js/
+Allow: /static/css/
+
+# Crawl delay (optional)
+Crawl-delay: 1

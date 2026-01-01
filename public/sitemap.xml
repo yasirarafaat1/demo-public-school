@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <url>
+    <loc>https://sspublicschool.vercel.app</loc>
+    <lastmod>2025-12-29T15:06:42.048Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/about</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/contact</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/infrastructure</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/staff</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/gallery</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/gallery/classroom</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/gallery/events</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/gallery/sports</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/gallery/cultural</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/principal-message</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/admission</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/admission/enquiry</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/result</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/developer/info</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://sspublicschool.vercel.app/admin/login</loc>
+    <lastmod>2025-12-29T15:06:42.050Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <!-- Images -->
+  <url>
+    <loc>https://sspublicschool.vercel.app/gallery</loc>
+    <image:image>
+      <image:loc>https://sspublicschool.vercel.app/Infra/Classroom.jpg</image:loc>
+      <image:title>Modern Classroom at Demo Public School</image:title>
+      <image:caption>Spacious and well-equipped classroom with modern teaching aids</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://sspublicschool.vercel.app/Infra/Library.jpg</image:loc>
+      <image:title>School Library</image:title>
+      <image:caption>Well-stocked library with diverse collection of books</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://sspublicschool.vercel.app/Infra/ScienceSchoolLab.jpg</image:loc>
+      <image:title>Science Laboratory</image:title>
+      <image:caption>Modern science lab for practical learning</image:caption>
+    </image:image>
+  </url>
+</urlset>

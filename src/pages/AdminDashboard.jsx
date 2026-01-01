@@ -11,7 +11,7 @@ import {
   getImportantDates,
   getNotices,
 } from "../services/supabaseService";
-import { getAllResults } from "../services/resultService";
+import { getAllResults, getClassesWithResults, getAvailableSessions } from "../services/resultService";
 import {
   Container,
   Row,
@@ -29,24 +29,34 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import {
+  FaThLarge,
+  FaUsers,
+  FaUserGraduate,
+  FaEnvelope,
+  FaNewspaper,
+  FaBullhorn,
+  FaImage,
+  FaChalkboardTeacher,
+  FaBook,
+  FaCog,
+  FaSignOutAlt,
   FaBars,
   FaTimes,
-  FaChevronLeft,
-  FaChevronRight,
-  FaImages,
-  FaUsers,
-  FaMoneyBillWave,
-  FaCalendarAlt,
-  FaBell,
-  FaGraduationCap,
-  FaEnvelope,
-  FaChartLine,
-  FaSignOutAlt,
-  FaThLarge,
-  FaSearch,
-  FaFilter,
   FaSort,
   FaChevronDown,
+  FaEye,
+  FaGraduationCap,
+  FaImages,
+  FaMoneyBillWave,
+  FaCalendarAlt,
+  FaChevronRight,
+  FaSearch,
+  FaBell,
+  FaChevronLeft,
+  FaClock,
+  FaChartLine,
+  FaUserPlus,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 import GalleryManager from "../components/admin/GalleryManager";
 import StaffManager from "../components/admin/StaffManager";
@@ -59,7 +69,38 @@ import StudentManager from "../components/admin/StudentManager";
 import ClassSessionManager from "../components/admin/ClassSessionManager";
 import FeesManagement from "../components/admin/FeesManagement";
 import VisitorAnalytics from "../components/admin/VisitorAnalytics";
+import AnalyticsErrorBoundary from "../components/admin/AnalyticsErrorBoundary";
 import styles from "../styles/AdminDashboard.module.css";
+
+// Real-time visitor tracking hook
+const useRealTimeVisitors = () => {
+  const [realTimeVisitors, setRealTimeVisitors] = useState(0);
+  const [activeSessions, setActiveSessions] = useState([]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        // Simulate real-time data (replace with actual implementation)
+        const mockData = {
+          activeVisitors: Math.floor(Math.random() * 10) + 1,
+          sessions: Array.from({ length: Math.floor(Math.random() * 5) + 1 }, (_, i) => ({
+            id: `session_${i}`,
+            page: ['Home', 'About', 'Contact', 'Admission'][Math.floor(Math.random() * 4)],
+            duration: Math.floor(Math.random() * 300) + 60
+          }))
+        };
+        setRealTimeVisitors(mockData.activeVisitors);
+        setActiveSessions(mockData.sessions);
+      } catch (error) {
+        console.error('Error fetching real-time data:', error);
+      }
+    }, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return { realTimeVisitors, activeSessions };
+};
 
 const AdminDashboard = () => {
   const [admissions, setAdmissions] = useState([]);
@@ -70,8 +111,18 @@ const AdminDashboard = () => {
   const [importantDates, setImportantDates] = useState([]);
   const [notices, setNotices] = useState([]);
   const [results, setResults] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [classesLoading, setClassesLoading] = useState(false);
+  const [classesError, setClassesError] = useState("");
+  const [availableSessions, setAvailableSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState("current");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [resultView, setResultView] = useState("classwise"); // Default to classwise
+  
+  // Real-time visitor tracking
+  const { realTimeVisitors, activeSessions } = useRealTimeVisitors();
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openPanels, setOpenPanels] = useState({});
@@ -139,9 +190,71 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  // Fetch recent activity
+  const fetchRecentActivity = async () => {
+    try {
+      // Mock recent activity data (replace with actual implementation)
+      const mockActivity = [
+        {
+          id: 1,
+          type: 'admission',
+          description: 'New admission enquiry received',
+          timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+          icon: 'fa-user-plus'
+        },
+        {
+          id: 2,
+          type: 'contact',
+          description: 'Contact form submitted',
+          timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+          icon: 'fa-envelope'
+        },
+        {
+          id: 3,
+          type: 'newsletter',
+          description: 'New newsletter subscription',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+          icon: 'fa-newspaper'
+        }
+      ];
+      setRecentActivity(mockActivity);
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
+    }
+  };
+
+  const fetchAvailableSessions = async () => {
+    try {
+      const sessionsData = await getAvailableSessions();
+      setAvailableSessions(sessionsData || []);
+    } catch (err) {
+      console.error("Error fetching sessions:", err);
+    }
+  };
+
+  // Fetch classes with results for selected session
+  const fetchClasses = async () => {
+    setClassesLoading(true);
+    setClassesError("");
+    try {
+      const classesData = await getClassesWithResults(selectedSession);
+      setClasses(classesData);
+    } catch (err) {
+      console.error("Error fetching classes:", err);
+      setClassesError("Failed to load classes. Please try again.");
+    } finally {
+      setClassesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchRecentActivity();
+    if (resultView === "classwise") {
+      fetchAvailableSessions();
+      fetchClasses();
+    }
+  }, [fetchData, resultView, selectedSession]);
 
   const handleLogout = async () => {
     try {
@@ -155,6 +268,11 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClassClick = (classInfo) => {
+    // Navigate to the student list page with class parameters
+    navigate(`/admin/class-students?class=${encodeURIComponent(classInfo.class_code)}&className=${encodeURIComponent(classInfo.class)}`);
   };
 
   // Format date for display
@@ -685,7 +803,134 @@ const AdminDashboard = () => {
                       </Card>
                     </Col>
                   </Row>
-                  <VisitorAnalytics />
+                  
+                  {/* Quick Stats - Real-time Visitors */}
+                  {/* <Row className="mb-4">
+                    <Col md={12}>
+                      <Card className={`${styles.quickStatsCard} mb-3`}>
+                        <Card.Header className={styles.quickStatsHeader}>
+                          <h6 className="mb-0">
+                            <FaEye className="me-2" />
+                            Live Statistics
+                          </h6>
+                          <small className="text-muted">Updates every 30 seconds</small>
+                        </Card.Header>
+                        <Card.Body>
+                          <Row>
+                            <Col md={3} sm={6} className="mb-3">
+                              <div className="text-center">
+                                <h3 className={styles.liveNumber}>{realTimeVisitors}</h3>
+                                <p className="text-muted mb-0">Active Visitors</p>
+                              </div>
+                            </Col>
+                            <Col md={3} sm={6} className="mb-3">
+                              <div className="text-center">
+                                <h3 className={styles.liveNumber}>{activeSessions.length}</h3>
+                                <p className="text-muted mb-0">Active Sessions</p>
+                              </div>
+                            </Col>
+                            <Col md={3} sm={6} className="mb-3">
+                              <div className="text-center">
+                                <h3 className={styles.liveNumber}>{admissions.length}</h3>
+                                <p className="text-muted mb-0">Pending Enquiries</p>
+                              </div>
+                            </Col>
+                            <Col md={3} sm={6} className="mb-3">
+                              <div className="text-center">
+                                <h3 className={styles.liveNumber}>{contacts.length}</h3>
+                                <p className="text-muted mb-0">Unread Messages</p>
+                              </div>
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row> */}
+
+                  {/* Recent Activity Feed */}
+                  <Row className="mb-4">
+                    <Col md={6}>
+                      <Card className={styles.activityCard}>
+                        <Card.Header className={styles.activityHeader}>
+                          <h6 className="mb-0">
+                            <FaClock className="me-2" />
+                            Recent Activity
+                          </h6>
+                        </Card.Header>
+                        <Card.Body className={styles.activityBody}>
+                          {recentActivity.length > 0 ? (
+                            <div className={styles.activityList}>
+                              {recentActivity.slice(0, 5).map((activity) => (
+                                <div key={activity.id} className={styles.activityItem}>
+                                  <div className={styles.activityIcon}>
+                                    <i className={`fas ${activity.icon}`}></i>
+                                  </div>
+                                  <div className={styles.activityContent}>
+                                    <div className={styles.activityDescription}>
+                                      {activity.description}
+                                    </div>
+                                    <div className={styles.activityTime}>
+                                      {new Date(activity.timestamp).toLocaleString()}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center text-muted py-3">
+                              No recent activity
+                            </div>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                    <Col md={6}>
+                      <Card className={styles.activityCard}>
+                        <Card.Header className={styles.activityHeader}>
+                          <h6 className="mb-0">
+                            <FaChartLine className="me-2" />
+                            Quick Actions
+                          </h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="d-grid gap-2">
+                            <button 
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => setActiveTab("admissions")}
+                            >
+                              <FaUserPlus className="me-2" />
+                              View All Enquiries
+                            </button>
+                            <button 
+                              className="btn btn-outline-success btn-sm"
+                              onClick={() => setActiveTab("contacts")}
+                            >
+                              <FaEnvelope className="me-2" />
+                              Check Messages
+                            </button>
+                            <button 
+                              className="btn btn-outline-info btn-sm"
+                              onClick={() => setActiveTab("notices")}
+                            >
+                              <FaBullhorn className="me-2" />
+                              Add Notice
+                            </button>
+                            <button 
+                              className="btn btn-outline-warning btn-sm"
+                              onClick={() => window.open('/', '_blank')}
+                            >
+                              <FaExternalLinkAlt className="me-2" />
+                              View Website
+                            </button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                  
+                  <AnalyticsErrorBoundary>
+                    <VisitorAnalytics />
+                  </AnalyticsErrorBoundary>
                 </div>
               )}
 
@@ -971,17 +1216,118 @@ const AdminDashboard = () => {
                   </Card.Body>
                 </Card>
               )}
-
               {/* Results Management */}
               {activeTab === "results" && (
-                <Card className="mb-4">
-                  <Card.Body>
-                    <ResultManager
-                      refreshTimestamp={refreshTimestamp}
-                      fetchData={fetchData}
-                    />
-                  </Card.Body>
-                </Card>
+                <>
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Result Management</h4>
+                    <div className="btn-group" role="group">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled
+                      >
+                        Current Session Classes
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Always show ResultManager for Add Result and Bulk Upload buttons */}
+                  <Card className="mb-4">
+                    <Card.Body>
+                      <ResultManager
+                        refreshTimestamp={refreshTimestamp}
+                        fetchData={fetchData}
+                      />
+                    </Card.Body>
+                  </Card>
+
+                  {resultView === "classwise" && (
+                    <>
+                      <Card className="mb-4">
+                        <Card.Header>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <h5 className="mb-0">
+                              <FaUsers className="me-2" />
+                              Available Classes
+                            </h5>
+                            <div style={{ minWidth: 220 }}>
+                              <Form.Select
+                                size="sm"
+                                value={selectedSession}
+                                onChange={(e) => {
+                                  setSelectedSession(e.target.value);
+                                }}
+                              >
+                                <option value="current">Current</option>
+                                {availableSessions.map((s) => (
+                                  <option key={s.value} value={s.value}>
+                                    {s.label}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </div>
+                          </div>
+                        </Card.Header>
+                        <Card.Body>
+                          {classesLoading ? (
+                            <div className="text-center py-4">
+                              <Spinner animation="border" />
+                              <p className="mt-2">Loading classes...</p>
+                            </div>
+                          ) : classesError ? (
+                            <Alert variant="danger" onClose={() => setClassesError("")} dismissible>
+                              {classesError}
+                            </Alert>
+                          ) : classes.length > 0 ? (
+                            <div className="table-responsive">
+                              <table className="table table-striped table-bordered table-hover">
+                                <thead>
+                                  <tr>
+                                    <th>Class Number</th>
+                                    <th>Class Code</th>
+                                    <th>Students with Results</th>
+                                    <th>Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {classes.map((classInfo) => (
+                                    <tr key={classInfo.class_code}>
+                                      <td>{classInfo.class}</td>
+                                      <td>{classInfo.class_code}</td>
+                                      <td>
+                                        <span className="badge bg-primary">
+                                          {classInfo.student_count}
+                                        </span>
+                                      </td>
+                                      <td>
+                                        <Button
+                                          variant="outline-primary"
+                                          size="sm"
+                                          onClick={() => handleClassClick(classInfo)}
+                                        >
+                                          <FaEye className="me-1" />
+                                          View Students
+                                        </Button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <p>No classes with results found.</p>
+                              <p className="text-muted">
+                                Upload some results first to see classes here.
+                              </p>
+                            </div>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </>
+                  )}
+                </>
               )}
 
               {/* Newsletter Subscriptions Table */}

@@ -9,7 +9,8 @@ import {
   Card,
   Alert,
 } from "react-bootstrap";
-import { adminLogin } from "../services/supabaseService"; // Adjust path as needed
+import { adminLogin } from "../services/supabaseService";
+import { createAdminSession } from "../utils/sessionManager";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -24,7 +25,16 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      await adminLogin(email, password);
+      const authData = await adminLogin(email, password);
+      
+      // Create custom admin session with 24-hour expiration
+      const sessionData = createAdminSession({
+        email: authData.user?.email || email,
+        id: authData.user?.id,
+        role: 'admin',
+        authData: authData
+      });
+
       // On successful login, redirect to the dashboard
       navigate("/admin/dashboard");
     } catch (err) {

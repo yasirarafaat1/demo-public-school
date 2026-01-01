@@ -246,7 +246,7 @@ const AdminDetailedResult = () => {
                           <Row className="mb-3">
                             <Col md={6}>
                               <p className="mb-1"><strong>Exam Type:</strong> {result.exam_type}</p>
-                              <p className="mb-1"><strong>Exam Date:</strong> {result.exam_date ? new Date(result.exam_date).toLocaleDateString() : "N/A"}</p>
+                              <p className="mb-1"><strong>Result Date:</strong> {result.exam_date ? new Date(result.exam_date).toLocaleDateString() : "N/A"}</p>
                               <p className="mb-0">
                                 <strong>Status:</strong>
                                 <span className={`badge ms-2 ${result.result_status === "Pass" ? "bg-success" : "bg-danger"}`}>

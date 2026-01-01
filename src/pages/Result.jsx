@@ -257,12 +257,6 @@ const Result = () => {
     doc.setFont('helvetica', 'normal');
     doc.text(` ${studentInfo?.roll_number || result[0]?.roll_no || 'N/A'}`, 420, studentInfoY + 110);
     
-    // Session
-    doc.setFont('helvetica', 'bold');
-    doc.text('Session:', 350, studentInfoY + 125);
-    doc.setFont('helvetica', 'normal');
-    doc.text(` ${studentInfo?.session ? `${studentInfo.session.start_year}-${studentInfo.session.end_year}` : result[0]?.session_year || 'N/A'}`, 395, studentInfoY + 125);
-
     // Enhanced Marks & Subjects Table with dynamic exam types
     let tableColumnHeaders = ['Subject'];
     
@@ -828,7 +822,7 @@ const Result = () => {
                               {examResult.exam_type || "N/A"}
                             </p>
                             <p className="mb-1">
-                              <strong>Exam Date:</strong>{" "}
+                              <strong>Result Date:</strong>{" "}
                               {examResult.exam_date
                                 ? new Date(
                                     examResult.exam_date

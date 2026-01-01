@@ -46,7 +46,7 @@ const Footer = () => {
                 style={{ maxHeight: "80px" }}
               />
               <div className="ms-3">
-                <h3>Demo Public School</h3>
+                <h3>Akamify School</h3>
                 <p className="mb-0">An Educational Institution</p>
               </div>
             </div>
@@ -171,11 +171,11 @@ const Footer = () => {
               </li>
               <li className="mb-3">
                 <a
-                  href="mailto:sspublicschool@gmail.com"
+                  href="mailto:yasirshekh0786@gmail.com"
                   className="d-flex align-items-center text-decoration-none text-white footer-link"
                 >
                   <i className="bi bi-envelope-fill me-3"></i>
-                  <span>demopublicschool@gmail.com</span>
+                  <span>akamify@gmail.com</span>
                 </a>
               </li>
             </ul>
@@ -218,7 +218,7 @@ const Footer = () => {
           <div className="col-12">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center border-top pt-4">
               <p className="mb-2 mb-md-0 text-start">
-                2017 - {new Date().getFullYear()} &copy; Demo Public School. All
+                2017 - {new Date().getFullYear()} &copy; Akamify School. All
                 rights reserved.
               </p>
               <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2">

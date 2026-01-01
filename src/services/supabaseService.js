@@ -1,10 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
+import { clearAdminSession } from '../utils/sessionManager';
 
 // Create a single supabase client for interacting with your database
 const supabase = createClient(
     import.meta.env.VITE_SUPABASE_URL,
     import.meta.env.VITE_SUPABASE_ANON_KEY
 );
+
+// Simple cache implementation for analytics data
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const getCachedData = (key) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedData = (key, data) => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+  
+  // Clean up old cache entries periodically
+  if (cache.size > 50) {
+    const now = Date.now();
+    for (const [cacheKey, cacheValue] of cache.entries()) {
+      if (now - cacheValue.timestamp > CACHE_TTL * 2) {
+        cache.delete(cacheKey);
+      }
+    }
+  }
+};
 
 // --- Authentication Functions ---
 
@@ -36,6 +66,10 @@ export const adminLogin = async (email, password) => {
  */
 export const adminLogout = async () => {
     try {
+        // Clear custom admin session
+        clearAdminSession();
+        
+        // Sign out from Supabase
         const { error } = await supabase.auth.signOut();
 
         if (error) throw error;
@@ -967,8 +1001,8 @@ export const trackVisitor = async (visitorData = {}) => {
             .single();
 
         if (error) {
-            // If it's a duplicate session ID, update existing record
-            if (error.code === '23505' || error.message.includes('duplicate key')) {
+            // If it's a duplicate session ID (23505, 409, or duplicate key error), update existing record
+            if (error.code === '23505' || error.status === 409 || error.message.includes('duplicate key') || error.message.includes('Conflict')) {
                 // First get current values to increment them properly
                 const { data: currentData, error: fetchError } = await supabase
                     .from('visitor_analytics')
@@ -1046,6 +1080,13 @@ export const getVisitorAnalytics = async (options = {}) => {
  */
 export const getVisitorStatistics = async () => {
     try {
+        // Check cache first
+        const cacheKey = 'visitor_stats';
+        const cachedData = getCachedData(cacheKey);
+        if (cachedData) {
+            return cachedData;
+        }
+
         const today = new Date().toISOString().split('T')[0];
         
         // Helper function to safely execute queries with fallback
@@ -1174,7 +1215,7 @@ export const getVisitorStatistics = async () => {
             pageVisitors[pageType] = pageStats[pageType].size;
         });
 
-        return {
+        const result = {
             totalVisitors: new Set(totalData?.map(d => d.session_id) || []).size,
             todayVisitors: new Set(todayData?.map(d => d.session_id) || []).size,
             returnVisitors: new Set(returnData?.map(d => d.session_id) || []).size,
@@ -1182,6 +1223,11 @@ export const getVisitorStatistics = async () => {
             dailyStats: dailyStatsArray,
             pageVisitors: pageVisitors
         };
+
+        // Cache the result
+        setCachedData(cacheKey, result);
+        
+        return result;
     } catch (error) {
         console.error("Error getting visitor statistics:", error.message);
         throw error;

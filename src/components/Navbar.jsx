@@ -6,7 +6,7 @@ const Navbar = () => {
 
   // Define an array of navigation items
   const navItems = [
-    { path: "/", label: "Home", icon: "bi bi-house-door" },
+    // { path: "/", label: "Home", icon: "bi bi-house-door" },
     { path: "/about", label: "About Us", icon: "bi bi-info-circle" },
     { path: "/admission", label: "Admission", icon: "bi bi-pencil-square" },
     { path: "/result", label: "Result", icon: "bi bi-file-earmark-bar-graph" },
@@ -27,9 +27,9 @@ const Navbar = () => {
               src="./logo.png"
               alt="Logo"
               // className="me-2"
-              style={{ height: "40px" }}
+              style={{ height: "40px", marginBottom: "5px", marginRight: "3px" }}
             />
-            <h2>Demo Public School</h2>
+            <h2>Akamify School</h2>
           </a>
           <button
             className="navbar-toggler"

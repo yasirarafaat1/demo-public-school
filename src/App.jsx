@@ -32,8 +32,10 @@ import Result from "./pages/Result";
 import AdminDetailedResult from "./pages/AdminDetailedResult";
 import EditResult from "./pages/EditResult";
 import AddResult from "./pages/AddResult";
+import BulkResultUpload from "./components/admin/BulkResultUpload";
 import ClassSessionManager from "./components/admin/ClassSessionManager";
 import ClassStudentsView from "./pages/ClassStudentsView";
+import ClassStudentList from "./pages/ClassStudentList";
 import StudentFeesPage from "./pages/StudentFeesPage";
 import { trackVisitor } from "./services/supabaseService";
 import { requestNotificationPermission } from "./services/notificationService";
@@ -87,6 +89,14 @@ const AppLayout = () => {
             }
           />
           <Route
+            path="/admin/class-students"
+            element={
+              <ProtectedRoute>
+                <ClassStudentList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/class/:classId/students"
             element={
               <ProtectedRoute>
@@ -115,6 +125,14 @@ const AppLayout = () => {
             element={
               <ProtectedRoute>
                 <AddResult />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/bulk-upload"
+            element={
+              <ProtectedRoute>
+                <BulkResultUpload />
               </ProtectedRoute>
             }
           />
