@@ -39,7 +39,6 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
 
   // Form states
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [showDeleteAssignmentModal, setShowDeleteAssignmentModal] =
     useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState(null); // Track which assignment to delete
@@ -54,6 +53,12 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
     email: "",
     registrationNumber: "",
     imageUrl: "",
+    street: "",
+    cityTownVillage: "",
+    district: "",
+    state: "",
+    country: "",
+    pinCode: "",
   });
 
   // Assignment form data
@@ -107,6 +112,12 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
           email: student.email || "",
           registrationNumber: student.registration_number || "",
           imageUrl: student.image_url || "",
+          street: student.street || "",
+          cityTownVillage: student.city_town_village || "",
+          district: student.district || "",
+          state: student.state || "",
+          country: student.country || "",
+          pinCode: student.pin_code || "",
         });
       }
       setError("");
@@ -173,29 +184,6 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
     setShowEditModal(false);
   };
 
-  // Open assignment modal
-  const openAssignmentModal = async () => {
-    // Reset form when opening
-    setAssignmentFormData({
-      classId: "",
-      sessionId: "",
-      rollNumber: "",
-    });
-
-    setShowAssignmentModal(true);
-  };
-
-  // Close assignment modal
-  const closeAssignmentModal = () => {
-    setShowAssignmentModal(false);
-  };
-
-  // Open delete assignment confirmation
-  const openDeleteAssignmentModal = (assignment) => {
-    setAssignmentToDelete(assignment);
-    setShowDeleteAssignmentModal(true);
-  };
-
   // Close delete assignment confirmation
   const closeDeleteAssignmentModal = () => {
     setShowDeleteAssignmentModal(false);
@@ -242,6 +230,12 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
         email: studentFormData.email,
         registrationNumber: studentFormData.registrationNumber,
         imageUrl: studentFormData.imageUrl,
+        street: studentFormData.street,
+        cityTownVillage: studentFormData.cityTownVillage,
+        district: studentFormData.district,
+        state: studentFormData.state,
+        country: studentFormData.country,
+        pinCode: studentFormData.pinCode,
       });
 
       setSuccess("Student updated successfully!");
@@ -421,6 +415,13 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
       : "N/A";
   };
 
+  // Check if student is already assigned to a specific session
+  const isStudentAssignedToSession = (sessionId) => {
+    return studentClasses.some(
+      (assignment) => assignment.session_id === parseInt(sessionId)
+    );
+  };
+
   // Get session details by ID
   const getSessionById = (id) => {
     const sessionObj = allSessions.find((s) => s.id === id);
@@ -499,15 +500,6 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
           </Button>
         </Col>
       </Row>
-
-      {(error || success) && (
-        <Row className="mb-3">
-          <Col>
-            {error && <Alert variant="danger">{error}</Alert>}
-            {success && <Alert variant="success">{success}</Alert>}
-          </Col>
-        </Row>
-      )}
 
       <Row>
         <Col md={4}>
@@ -614,16 +606,143 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
             </Card.Body>
           </Card>
 
+          <Card className="mb-4">
+            <Card.Header>
+              <h5>Address Information</h5>
+            </Card.Header>
+            <Card.Body>
+              <Row>
+                <Col md={12}>
+                  <p>
+                    <strong>Street:</strong> {studentFormData.street || "N/A"}
+                  </p>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={4}>
+                  <p>
+                    <strong>City/Town/Village:</strong> {studentFormData.cityTownVillage || "N/A"}
+                  </p>
+                </Col>
+                <Col md={4}>
+                  <p>
+                    <strong>District:</strong> {studentFormData.district || "N/A"}
+                  </p>
+                </Col>
+                <Col md={4}>
+                  <p>
+                    <strong>State:</strong> {studentFormData.state || "N/A"}
+                  </p>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={6}>
+                  <p>
+                    <strong>Country:</strong> {studentFormData.country || "N/A"}
+                  </p>
+                </Col>
+                <Col md={6}>
+                  <p>
+                    <strong>Pin Code:</strong> {studentFormData.pinCode || "N/A"}
+                  </p>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5>Class Assignments</h5>
-              <div>
-                <Button variant="primary" onClick={openAssignmentModal}>
-                  <FaEdit className="me-1" /> Assign New Class
-                </Button>
-              </div>
             </Card.Header>
             <Card.Body>
+              {/* Quick Assignment Form */}
+              <div className="mb-4 p-3 bg-light rounded">
+                <h6 className="mb-3">Assign New Class</h6>
+                
+                {/* Inline Error Display */}
+                {(error || success) && (
+                  <div className="mb-3">
+                    {error && <Alert variant="danger">{error}</Alert>}
+                    {success && <Alert variant="success">{success}</Alert>}
+                  </div>
+                )}
+                
+                <Form onSubmit={handleAssignmentFormSubmit}>
+                  <Row>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Class *</Form.Label>
+                        <Form.Select
+                          name="classId"
+                          value={assignmentFormData.classId}
+                          onChange={handleAssignmentFormChange}
+                          required
+                        >
+                          <option value="">Select a class</option>
+                          {classes.map((classObj) => (
+                            <option key={classObj.id} value={classObj.id}>
+                              {classObj.class_number} ({classObj.class_code})
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Session *</Form.Label>
+                        <Form.Select
+                          name="sessionId"
+                          value={assignmentFormData.sessionId}
+                          onChange={handleAssignmentFormChange}
+                          required
+                        >
+                          <option value="">Select a session</option>
+                          {activeSessions.map((session) => {
+                            const isAssigned = isStudentAssignedToSession(session.id);
+                            return (
+                              <option 
+                                key={session.id} 
+                                value={session.id}
+                                disabled={isAssigned}
+                                title={isAssigned ? "Student already assigned to this session" : ""}
+                              >
+                                {session.session_year} ({session.start_month}/
+                                {session.start_year} - {session.end_month}/
+                                {session.end_year}) {isAssigned ? " ✓" : ""}
+                              </option>
+                            );
+                          })}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Roll Number *</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="rollNumber"
+                          value={assignmentFormData.rollNumber}
+                          onChange={handleAssignmentFormChange}
+                          placeholder="Enter roll number"
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <div className="d-flex justify-content-end">
+                    <Button variant="primary" type="submit" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-1" />
+                          Assigning...
+                        </>
+                      ) : (
+                        "Assign Class"
+                      )}
+                    </Button>
+                  </div>
+                </Form>
+              </div>
               {/* Filters and Sort Controls */}
               <div className="mb-3">
                 <Row>
@@ -865,6 +984,93 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
                 </Form.Group>
               </Col>
             </Row>
+
+            <Row>
+              <Col md={12}>
+                <h6 className="mb-3 mt-4">Address Information</h6>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Street Address</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="street"
+                    value={studentFormData.street}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter street address"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>City/Town/Village</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="cityTownVillage"
+                    value={studentFormData.cityTownVillage}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter city/town/village"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>District</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="district"
+                    value={studentFormData.district}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter district"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>State</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="state"
+                    value={studentFormData.state}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter state"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Country</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="country"
+                    value={studentFormData.country}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter country"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Pin Code</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="pinCode"
+                    value={studentFormData.pinCode}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter pin code"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={closeEditModal}>
@@ -879,85 +1085,6 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
               ) : (
                 <>
                   <FaSave className="me-1" /> Save Changes
-                </>
-              )}
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
-
-      {/* Assignment Modal */}
-      <Modal show={showAssignmentModal} onHide={closeAssignmentModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Assign Class</Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleAssignmentFormSubmit}>
-          <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Class *</Form.Label>
-              <Form.Select
-                name="classId"
-                value={assignmentFormData.classId}
-                onChange={handleAssignmentFormChange}
-                required
-              >
-                <option value="">Select a class</option>
-                {classes.map((classObj) => (
-                  <option key={classObj.id} value={classObj.id}>
-                    {classObj.class_number} ({classObj.class_code})
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Session *</Form.Label>
-              <Form.Select
-                name="sessionId"
-                value={assignmentFormData.sessionId}
-                onChange={handleAssignmentFormChange}
-                required
-              >
-                <option value="">Select a session</option>
-                {activeSessions.map((session) => (
-                  <option key={session.id} value={session.id}>
-                    {session.session_year} ({session.start_month}/
-                    {session.start_year} - {session.end_month}/
-                    {session.end_year})
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Roll Number *</Form.Label>
-              <Form.Control
-                type="text"
-                name="rollNumber"
-                value={assignmentFormData.rollNumber}
-                onChange={handleAssignmentFormChange}
-                placeholder="Enter 6-digit roll number"
-                required
-                maxLength={6}
-              />
-              <Form.Text className="text-muted">
-                Roll number must be exactly 6 digits.
-              </Form.Text>
-            </Form.Group>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={closeAssignmentModal}>
-              <FaTimes className="me-1" /> Cancel
-            </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Spinner animation="border" size="sm" className="me-1" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <FaSave className="me-1" /> Save Assignment
                 </>
               )}
             </Button>

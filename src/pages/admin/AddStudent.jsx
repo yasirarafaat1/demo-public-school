@@ -20,6 +20,12 @@ const AddStudent = () => {
     email: "",
     registrationNumber: "",
     imageUrl: "",
+    street: "",
+    cityTownVillage: "",
+    district: "",
+    state: "",
+    country: "",
+    pinCode: "",
   });
 
   const handleStudentFormChange = (e) => {
@@ -59,6 +65,12 @@ const AddStudent = () => {
         email: studentFormData.email,
         registrationNumber: studentFormData.registrationNumber,
         imageUrl: studentFormData.imageUrl,
+        street: studentFormData.street,
+        cityTownVillage: studentFormData.cityTownVillage,
+        district: studentFormData.district,
+        state: studentFormData.state,
+        country: studentFormData.country,
+        pinCode: studentFormData.pinCode,
       });
 
       setSuccess("Student added successfully!");
@@ -221,6 +233,93 @@ const AddStudent = () => {
                       />
                     </div>
                   )}
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={12}>
+                <h5 className="mb-3 mt-4">Address Information</h5>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Street Address</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="street"
+                    value={studentFormData.street}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter street address"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>City/Town/Village</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="cityTownVillage"
+                    value={studentFormData.cityTownVillage}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter city/town/village"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>District</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="district"
+                    value={studentFormData.district}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter district"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>State</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="state"
+                    value={studentFormData.state}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter state"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Country</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="country"
+                    value={studentFormData.country}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter country"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Pin Code</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="pinCode"
+                    value={studentFormData.pinCode}
+                    onChange={handleStudentFormChange}
+                    placeholder="Enter pin code"
+                  />
                 </Form.Group>
               </Col>
             </Row>

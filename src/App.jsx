@@ -39,6 +39,7 @@ import ClassStudentList from "./pages/ClassStudentList";
 import StudentFeesPage from "./pages/StudentFeesPage";
 import AddStudent from "./pages/admin/AddStudent";
 import AllStudents from "./pages/admin/AllStudents";
+import StudentProfileWrapper from "./components/admin/StudentProfileWrapper";
 import { trackVisitor } from "./services/supabaseService";
 import { requestNotificationPermission } from "./services/notificationService";
 
@@ -159,6 +160,14 @@ const AppLayout = () => {
             element={
               <ProtectedRoute>
                 <AllStudents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/student/profile/:studentId"
+            element={
+              <ProtectedRoute>
+                <StudentProfileWrapper />
               </ProtectedRoute>
             }
           />

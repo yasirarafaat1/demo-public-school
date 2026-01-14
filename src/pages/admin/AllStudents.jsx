@@ -24,6 +24,7 @@ import {
   FaTrash,
   FaArrowLeft,
   FaSearch,
+  FaEye,
 } from "react-icons/fa";
 
 const AllStudents = () => {
@@ -89,7 +90,13 @@ const AllStudents = () => {
           student.mother_name.toLowerCase().includes(term) ||
           student.registration_number.toLowerCase().includes(term) ||
           student.mobile_number.includes(term) ||
-          student.email.toLowerCase().includes(term);
+          student.email.toLowerCase().includes(term) ||
+          (student.street && student.street.toLowerCase().includes(term)) ||
+          (student.city_town_village && student.city_town_village.toLowerCase().includes(term)) ||
+          (student.district && student.district.toLowerCase().includes(term)) ||
+          (student.state && student.state.toLowerCase().includes(term)) ||
+          (student.country && student.country.toLowerCase().includes(term)) ||
+          (student.pin_code && student.pin_code.includes(term));
         
         if (!searchMatch) return false;
       }
@@ -190,6 +197,23 @@ const AllStudents = () => {
     return classObj
       ? `${classObj.class_number} (${classObj.class_code})`
       : "N/A";
+  };
+
+  // Navigate to student profile
+  const navigateToStudentProfile = (student) => {
+    navigate(`/admin/student/profile/${student.id}`, { state: { student } });
+  };
+
+  // Format address for display
+  const formatAddress = (student) => {
+    const parts = [];
+    if (student.street) parts.push(student.street);
+    if (student.city_town_village) parts.push(student.city_town_village);
+    if (student.district) parts.push(student.district);
+    if (student.state) parts.push(student.state);
+    if (student.pin_code) parts.push(student.pin_code);
+    
+    return parts.length > 0 ? parts.join(', ') : 'N/A';
   };
 
   // Clear messages after timeout
@@ -321,6 +345,7 @@ const AllStudents = () => {
                       >
                         Father's Name {getSortIcon("father_name")}
                       </th>
+                      <th>Address</th>
                       <th 
                         style={{ cursor: "pointer" }}
                         onClick={() => handleSort("class")}
@@ -333,6 +358,7 @@ const AllStudents = () => {
                       >
                         Registration Date {getSortIcon("registration_datetime")}
                       </th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -344,11 +370,27 @@ const AllStudents = () => {
                           <td>{student.registration_number || "N/A"}</td>
                           <td>{student.father_name}</td>
                           <td>
+                            <div style={{ maxWidth: "200px", wordBreak: "break-word" }}>
+                              {formatAddress(student)}
+                            </div>
+                          </td>
+                          <td>
                             {assignment
                               ? getClassNameById(assignment.class_id)
                               : "N/A"}
                           </td>
                           <td>{formatDateTime(student.registration_datetime)}</td>
+                          <td>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => navigateToStudentProfile(student)}
+                              title="View Student Profile"
+                            >
+                              <FaEye className="me-1" />
+                              Profile
+                            </Button>
+                          </td>
                         </tr>
                       );
                     })}

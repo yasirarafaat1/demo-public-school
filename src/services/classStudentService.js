@@ -200,7 +200,7 @@ export const getStudents = async () => {
     try {
         let { data, error } = await supabase
             .from('students')
-            .select('id, student_name, father_name, mother_name, date_of_birth, mobile_number, email, registration_number, image_url, registration_datetime, created_at, updated_at')
+            .select('id, student_name, father_name, mother_name, date_of_birth, mobile_number, email, registration_number, image_url, registration_datetime, created_at, updated_at, street, city_town_village, district, state, country, pin_code')
             .order('student_name', { ascending: true });
 
         if (error) throw error;
@@ -227,6 +227,12 @@ export const addStudent = async (studentData) => {
             email: studentData.email,
             registration_number: studentData.registrationNumber,
             image_url: studentData.imageUrl,
+            street: studentData.street,
+            city_town_village: studentData.cityTownVillage,
+            district: studentData.district,
+            state: studentData.state,
+            country: studentData.country,
+            pin_code: studentData.pinCode,
             registration_datetime: studentData.registrationDatetime || new Date().toISOString(),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -262,6 +268,12 @@ export const updateStudent = async (id, studentData) => {
             email: studentData.email,
             registration_number: studentData.registrationNumber,
             image_url: studentData.imageUrl,
+            street: studentData.street,
+            city_town_village: studentData.cityTownVillage,
+            district: studentData.district,
+            state: studentData.state,
+            country: studentData.country,
+            pin_code: studentData.pinCode,
             updated_at: new Date().toISOString()
         };
 
