@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import nodemailer from 'nodemailer';
 
 const formatMoney = (value) => {
   const n = Number(value);
@@ -96,6 +96,17 @@ const buildEmailHtml = ({
   `;
 };
 
+// Create transporter using environment variables
+const transporter = nodemailer.createTransporter({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -121,20 +132,18 @@ export default async function handler(req, res) {
       schoolEmail,
     } = req.body || {};
 
-    if (!process.env.RESEND_API_KEY) {
-      res.status(500).json({ error: "RESEND_API_KEY is not configured" });
-      return;
-    }
-
     if (!to) {
       res.status(400).json({ error: "Missing recipient email (to)" });
       return;
     }
 
-    const fromEmail =
-      process.env.RESEND_FROM_EMAIL || "School <onboarding@resend.dev>";
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      res.status(500).json({ error: "SMTP configuration is missing" });
+      return;
+    }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER;
+    const fromName = process.env.EMAIL_FROM_NAME || schoolName || "Demo Public School";
 
     const subject = `Fee Details Added: ${month} ${year}`;
 
@@ -155,20 +164,25 @@ export default async function handler(req, res) {
       schoolEmail: schoolEmail || process.env.SCHOOL_EMAIL || "",
     });
 
-    const { data, error } = await resend.emails.send({
-      from: fromEmail,
-      to,
-      subject,
-      html,
+    const mailOptions = {
+      from: `"${fromName}" <${fromEmail}>`,
+      to: Array.isArray(to) ? to.join(', ') : to,
+      subject: subject,
+      html: html,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ 
+      success: true, 
+      messageId: info.messageId,
+      response: 'Fee email sent successfully' 
     });
-
-    if (error) {
-      res.status(500).json({ error: error.message || "Failed to send email" });
-      return;
-    }
-
-    res.status(200).json({ success: true, data });
-  } catch (e) {
-    res.status(500).json({ error: e?.message || "Unknown error" });
+  } catch (error) {
+    console.error('Fee email sending error:', error);
+    res.status(500).json({ 
+      error: 'Failed to send fee email', 
+      details: error.message 
+    });
   }
 }

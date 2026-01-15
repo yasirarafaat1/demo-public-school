@@ -1,8 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
-import { FaArrowLeft, FaSave, FaTimes } from "react-icons/fa";
 import { addStudent } from "../../services/classStudentService";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+  Image,
+} from "react-bootstrap";
+import { FaArrowLeft, FaSave, FaTimes } from "react-icons/fa";
 
 const AddStudent = () => {
   const navigate = useNavigate();

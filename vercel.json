@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/send-email.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -19,5 +24,14 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "SMTP_HOST": "@smtp_host",
+    "SMTP_PORT": "@smtp_port", 
+    "SMTP_SECURE": "@smtp_secure",
+    "SMTP_USER": "@smtp_user",
+    "SMTP_PASS": "@smtp_pass",
+    "EMAIL_FROM_ADDRESS": "@email_from_address",
+    "EMAIL_FROM_NAME": "@email_from_name"
+  }
 }

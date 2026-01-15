@@ -25,6 +25,7 @@ import {
   deleteStudent,
   getStudentClasses, // Import to check for roll number conflicts
 } from "../../services/classStudentService";
+import { sendEmail, emailTemplates } from "../../services/emailService";
 
 const StudentProfile = ({ student, onBack, onUpdate }) => {
   const navigate = useNavigate();
@@ -332,19 +333,42 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
       setLoading(true);
 
       // Add new assignment
-      await assignStudentToClass({
+      const newAssignment = await assignStudentToClass({
         studentId: student.id,
         classId: parseInt(assignmentFormData.classId),
         sessionId: parseInt(assignmentFormData.sessionId),
         rollNumber: assignmentFormData.rollNumber,
       });
 
+      // Send class assignment email if student has email
+      if (studentFormData.email) {
+        try {
+          const classData = classes.find(c => c.id === parseInt(assignmentFormData.classId));
+          const sessionData = allSessions.find(s => s.id === parseInt(assignmentFormData.sessionId));
+          
+          await sendEmail(emailTemplates.classAssignment(
+            studentFormData,
+            { ...classData, rollNumber: assignmentFormData.rollNumber },
+            sessionData
+          ));
+          console.log("Class assignment email sent successfully");
+        } catch (emailError) {
+          console.error("Failed to send class assignment email:", emailError);
+          // Don't fail the whole process if email fails
+        }
+      }
+
       setSuccess("Student assigned to class successfully!");
 
       // Reload data to reflect changes
       await loadData();
 
-      closeAssignmentModal();
+      // Reset form
+      setAssignmentFormData({
+        classId: "",
+        sessionId: "",
+        rollNumber: "",
+      });
     } catch (err) {
       setError("Failed to save assignment. Please try again.");
       console.error(err);
