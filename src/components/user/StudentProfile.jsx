@@ -25,7 +25,7 @@ import {
   deleteStudent,
   getStudentClasses, // Import to check for roll number conflicts
 } from "../../services/classStudentService";
-import { sendEmail, emailTemplates } from "../../services/emailService";
+import { sendEmail, emailTemplates } from "../../../services/emailService";
 
 const StudentProfile = ({ student, onBack, onUpdate }) => {
   const navigate = useNavigate();
