@@ -191,6 +191,12 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
     setAssignmentToDelete(null);
   };
 
+  // Open delete assignment confirmation
+  const openDeleteAssignmentModal = (assignment) => {
+    setAssignmentToDelete(assignment);
+    setShowDeleteAssignmentModal(true);
+  };
+
   // Close duplicate roll number modal and reset form
   const closeDuplicateRollModal = () => {
     setShowDuplicateRollModal(false);
