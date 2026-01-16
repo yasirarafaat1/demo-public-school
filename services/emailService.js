@@ -4,49 +4,10 @@ const API_BASE_URL = 'https://schooldemo.akamify.com';
 
 // Send email function
 export const sendEmail = async (emailData) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/send-email`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(emailData),
-        });
-
-        // Check if response is JSON before parsing
-        const contentType = response.headers.get('content-type');
-        let result;
-        
-        if (contentType && contentType.includes('application/json')) {
-            result = await response.json();
-        } else {
-            // If not JSON, get text and create error object
-            const text = await response.text();
-            result = { error: text || 'Unknown server error' };
-        }
-
-        if (!response.ok) {
-            // Provide more user-friendly error messages
-            if (response.status === 500) {
-                throw new Error('Email service is temporarily unavailable. Please try again later or contact support.');
-            } else if (response.status === 404) {
-                throw new Error('Email service not found. Please contact support.');
-            } else {
-                throw new Error(result.error || `Failed to send email (HTTP ${response.status})`);
-            }
-        }
-
-        return result;
-    } catch (error) {
-        console.error('Email service error:', error);
-        
-        // If it's a network error, provide a more helpful message
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            throw new Error('Unable to connect to email service. Please check your internet connection.');
-        }
-        
-        throw error;
-    }
+    // Temporarily disable email service due to deployment issues
+    console.log('Email service temporarily disabled. Email data:', JSON.stringify(emailData, null, 2));
+    
+    throw new Error('Email service is temporarily under maintenance. Please try again later.');
 };
 
 // Send fee payment email
