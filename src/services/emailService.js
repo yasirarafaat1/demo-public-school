@@ -39,7 +39,16 @@ export const sendFeeAddedEmail = async ({
     }),
   });
 
-  const json = await res.json().catch(() => null);
+  const contentType = res.headers.get('content-type');
+  let json;
+  
+  if (contentType && contentType.includes('application/json')) {
+    json = await res.json().catch(() => null);
+  } else {
+    // If not JSON, get text and create error object
+    const text = await res.text();
+    json = { error: text || 'Unknown server error' };
+  }
 
   if (!res.ok) {
     const msg = json?.error || `Failed to send email (HTTP ${res.status})`;

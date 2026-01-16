@@ -13,15 +13,38 @@ export const sendEmail = async (emailData) => {
             body: JSON.stringify(emailData),
         });
 
-        const result = await response.json();
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        let result;
+        
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        } else {
+            // If not JSON, get text and create error object
+            const text = await response.text();
+            result = { error: text || 'Unknown server error' };
+        }
 
         if (!response.ok) {
-            throw new Error(result.error || 'Failed to send email');
+            // Provide more user-friendly error messages
+            if (response.status === 500) {
+                throw new Error('Email service is temporarily unavailable. Please try again later or contact support.');
+            } else if (response.status === 404) {
+                throw new Error('Email service not found. Please contact support.');
+            } else {
+                throw new Error(result.error || `Failed to send email (HTTP ${response.status})`);
+            }
         }
 
         return result;
     } catch (error) {
         console.error('Email service error:', error);
+        
+        // If it's a network error, provide a more helpful message
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            throw new Error('Unable to connect to email service. Please check your internet connection.');
+        }
+        
         throw error;
     }
 };
@@ -33,6 +56,11 @@ export const sendFeeAddedEmail = async (studentData, feeData) => {
         console.log("Fee payment email sent successfully");
     } catch (error) {
         console.error("Failed to send fee payment email:", error);
+        
+        // Fallback: Log the email data locally for debugging
+        const emailData = emailTemplates.feePayment(studentData, feeData);
+        console.log("Email data (fallback):", JSON.stringify(emailData, null, 2));
+        
         // Don't throw error to avoid breaking the fee submission process
     }
 };

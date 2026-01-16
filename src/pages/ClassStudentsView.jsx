@@ -145,6 +145,9 @@ const ClassStudentsView = () => {
                 </Button>
               </div>
               <div>
+                <h4 className="mb-0">{classInfo?.class_name || "Class"}</h4>
+              </div>
+              <div>
                 <Button
                   variant="primary"
                   onClick={() => navigate(`/admin/student/add`)}
