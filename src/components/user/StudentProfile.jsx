@@ -777,10 +777,10 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
                             }
                           }}
                         >
-                          <option value="">Select an existing roll number...</option>
+                          <option value="">Existing Roll Numbers</option>
                           {existingRollNumbers.map((rollNum) => (
                             <option key={rollNum} value={rollNum}>
-                              Roll Number: {rollNum.toString().padStart(6, '0')}
+                              {rollNum.toString().padStart(6, '0')}
                             </option>
                           ))}
                         </Form.Control>

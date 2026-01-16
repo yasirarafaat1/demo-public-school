@@ -156,6 +156,18 @@ const StudentFees = () => {
     try {
       setError("");
 
+      // Validate form
+      if (!feeForm.month || !feeForm.year || !feeForm.amount) {
+        setError("Month, year, and amount are required.");
+        return;
+      }
+
+      // Validate receipt number is exactly 6 digits
+      if (feeForm.receiptNumber && !/^\d{6}$/.test(feeForm.receiptNumber)) {
+        setError("Receipt number must be exactly 6 digits.");
+        return;
+      }
+
       const feeData = {
         studentId: studentId,
         classId: currentAssignment?.class_id,
@@ -172,6 +184,45 @@ const StudentFees = () => {
       if (editingFee) {
         // Update existing fee
         await updateFee(editingFee.id, feeData);
+        
+        // Send email for updated fee
+        const studentEmail = studentInfo?.email;
+        if (studentEmail) {
+          const dueAmount = (feeData.amount || 0) - (feeData.paidAmount || 0);
+
+          try {
+            await sendFeeAddedEmail({
+              to: studentEmail,
+              studentName: studentInfo?.student_name || "Student",
+              month: feeData.month,
+              year: feeData.year,
+              totalAmount: feeData.amount,
+              paidAmount: feeData.paidAmount || 0,
+              dueAmount,
+              status: feeData.status,
+              receiptNumber: feeData.receiptNumber,
+              createdAt: new Date().toISOString(),
+              portalLink:
+                import.meta.env.VITE_SCHOOL_PORTAL_LINK ||
+                window.location.origin,
+              schoolName: import.meta.env.VITE_SCHOOL_NAME || "Akamify School",
+              schoolAddress: import.meta.env.VITE_SCHOOL_ADDRESS || "123, street, Town, District, State, Country",
+              schoolContact: import.meta.env.VITE_SCHOOL_CONTACT || "+91 79053 25078",
+              schoolEmail: import.meta.env.VITE_SCHOOL_EMAIL || "akamifyschool@gmail.com",
+            });
+            console.log(`Fee update email sent successfully to ${studentEmail}`);
+          } catch (emailErr) {
+            console.error("Fee updated but email sending failed:", emailErr);
+            setError(
+              "Fee updated successfully, but email sending failed. Please verify email configuration."
+            );
+          }
+        } else {
+          console.warn(
+            "Student email not found. Skipping fee update notification email.",
+            studentInfo
+          );
+        }
       } else {
         // Add new fee
         const insertedFee = await addFee(feeData);
@@ -182,7 +233,7 @@ const StudentFees = () => {
 
           try {
             await sendFeeAddedEmail({
-              to: "yasirshekh0786@gmail.com",
+              to: studentEmail,
               studentName: studentInfo?.student_name || "Student",
               month: feeData.month,
               year: feeData.year,
@@ -195,15 +246,16 @@ const StudentFees = () => {
               portalLink:
                 import.meta.env.VITE_SCHOOL_PORTAL_LINK ||
                 window.location.origin,
-              schoolName: import.meta.env.VITE_SCHOOL_NAME || "Demo Public School",
-              schoolAddress: import.meta.env.VITE_SCHOOL_ADDRESS || "",
-              schoolContact: import.meta.env.VITE_SCHOOL_CONTACT || "",
-              schoolEmail: import.meta.env.VITE_SCHOOL_EMAIL || "",
+              schoolName: import.meta.env.VITE_SCHOOL_NAME || "Akamify School",
+              schoolAddress: import.meta.env.VITE_SCHOOL_ADDRESS || "123, street, Town, District, State, Country",
+              schoolContact: import.meta.env.VITE_SCHOOL_CONTACT || "+91 79053 25078",
+              schoolEmail: import.meta.env.VITE_SCHOOL_EMAIL || "akamifyschool@gmail.com",
             });
+            console.log(`Fee email sent successfully to ${studentEmail}`);
           } catch (emailErr) {
             console.error("Fee saved but email sending failed:", emailErr);
             setError(
-              "Fee saved successfully, but email sending failed. Please verify Resend configuration."
+              "Fee saved successfully, but email sending failed. Please verify email configuration."
             );
           }
         } else {
@@ -263,7 +315,7 @@ const StudentFees = () => {
   const getMonthOptions = () => {
     const months = [
       "January",
-      "February",
+      "February", 
       "March",
       "April",
       "May",
@@ -275,7 +327,17 @@ const StudentFees = () => {
       "November",
       "December",
     ];
-    return months.map((month) => (
+
+    // Get already added months for current year
+    const currentYear = new Date().getFullYear();
+    const addedMonths = fees
+      .filter(fee => fee.year === currentYear)
+      .map(fee => fee.month);
+
+    // Filter out already added months
+    const availableMonths = months.filter(month => !addedMonths.includes(month));
+
+    return availableMonths.map((month) => (
       <option key={month} value={month}>
         {month}
       </option>
@@ -284,15 +346,11 @@ const StudentFees = () => {
 
   const getCurrentYearOptions = () => {
     const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let i = currentYear - 2; i <= currentYear + 2; i++) {
-      years.push(
-        <option key={i} value={i}>
-          {i}
-        </option>
-      );
-    }
-    return years;
+    return [
+      <option key={currentYear} value={currentYear}>
+        {currentYear}
+      </option>
+    ];
   };
 
   if (loading && !studentInfo) {
@@ -503,12 +561,24 @@ const StudentFees = () => {
                       <Form.Group className="mb-3">
                         <Form.Label>Receipt Number</Form.Label>
                         <Form.Control
-                          as="textarea"
+                          type="number"
                           name="receiptNumber"
                           value={feeForm.receiptNumber}
-                          onChange={handleFormChange}
-                          rows="2"
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Limit to 6 digits
+                            if (value.length <= 6) {
+                              handleFormChange(e);
+                            }
+                          }}
+                          placeholder="Enter 6-digit receipt number"
+                          min="0"
+                          max="999999"
+                          required
                         />
+                        <Form.Text className="text-muted">
+                          Enter a 6-digit receipt number
+                        </Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>
