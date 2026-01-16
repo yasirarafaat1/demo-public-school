@@ -92,9 +92,9 @@ export const emailTemplates = {
           </div>
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
             <p style="color: #6c757d; margin: 0;">
-              Demo Public School<br>
-              Contact: ${process.env.REACT_APP_SCHOOL_PHONE || 'N/A'}<br>
-              Email: ${process.env.REACT_APP_SCHOOL_EMAIL || 'N/A'}
+              Akamify School<br>
+              Contact: ${process.env.REACT_APP_SCHOOL_PHONE || '+91 79053 25078'}<br>
+              Email: ${process.env.REACT_APP_SCHOOL_EMAIL || 'akamifyschool@gmail.com'}
             </p>
           </div>
         </div>
@@ -121,9 +121,9 @@ export const emailTemplates = {
           </div>
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
             <p style="color: #6c757d; margin: 0;">
-              Demo Public School<br>
-              Contact: ${process.env.REACT_APP_SCHOOL_PHONE || 'N/A'}<br>
-              Email: ${process.env.REACT_APP_SCHOOL_EMAIL || 'N/A'}
+              Akamify School<br>
+              Contact: ${process.env.REACT_APP_SCHOOL_PHONE || '+91 79053 25078'}<br>
+              Email: ${process.env.REACT_APP_SCHOOL_EMAIL || 'akamifyschool@gmail.com'}
             </p>
           </div>
         </div>

@@ -1,9 +1,9 @@
 {
-  "name": "react-javascript",
+  "name": "Akamify School Management System",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "React TypeScript on Replit, using Vite bundler",
+  "description": "School Management System",
   "engines": {
     "node": "20.x"
   },

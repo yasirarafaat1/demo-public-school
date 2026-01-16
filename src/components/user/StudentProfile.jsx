@@ -80,6 +80,8 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
   // State for duplicate roll number modal
   const [showDuplicateRollModal, setShowDuplicateRollModal] = useState(false);
   const [suggestedRollNumber, setSuggestedRollNumber] = useState("");
+  const [existingRollNumber, setExistingRollNumber] = useState("");
+  const [existingRollNumbers, setExistingRollNumbers] = useState([]);
 
   // Load data on component mount
   useEffect(() => {
@@ -147,7 +149,7 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
       [name]: value,
     }));
 
-    // If classId is changed, suggest next available roll number
+    // If classId is changed, suggest next available roll number and populate existing roll numbers
     if (name === "classId" && value) {
       try {
         const allStudentClasses = await getStudentClasses();
@@ -157,6 +159,9 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
           .filter((sc) => sc.class_id === parseInt(value))
           .map((sc) => parseInt(sc.roll_number))
           .sort((a, b) => b - a); // Sort in descending order
+
+        // Set existing roll numbers for dropdown
+        setExistingRollNumbers(rollNumbersInClass);
 
         let nextRollNumber = "000001"; // Default starting roll number
         if (rollNumbersInClass.length > 0) {
@@ -172,6 +177,12 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
       } catch (err) {
         console.error("Error getting roll numbers:", err);
       }
+    }
+
+    // If sessionId is changed, clear existing roll number selection
+    if (name === "sessionId" && value) {
+      setExistingRollNumber("");
+      setExistingRollNumbers([]);
     }
   };
 
@@ -375,6 +386,8 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
         sessionId: "",
         rollNumber: "",
       });
+      setExistingRollNumber("");
+      setExistingRollNumbers([]);
     } catch (err) {
       if (err.message && err.message.includes('already assigned')) {
         setError("Student is already assigned to this class for this session.");
@@ -747,6 +760,30 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
                             );
                           })}
                         </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Existing Roll Numbers in Class</Form.Label>
+                        <Form.Control
+                          as="select"
+                          name="existingRollNumber"
+                          value={existingRollNumber}
+                          onChange={(e) => {
+                            const rollNum = e.target.value;
+                            setExistingRollNumber(rollNum);
+                            if (rollNum) {
+                              setAssignmentFormData(prev => ({ ...prev, rollNumber: rollNum }));
+                            }
+                          }}
+                        >
+                          <option value="">Select an existing roll number...</option>
+                          {existingRollNumbers.map((rollNum) => (
+                            <option key={rollNum} value={rollNum}>
+                              Roll Number: {rollNum.toString().padStart(6, '0')}
+                            </option>
+                          ))}
+                        </Form.Control>
                       </Form.Group>
                     </Col>
                     <Col md={4}>

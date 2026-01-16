@@ -27,12 +27,7 @@ const buildEmailHtml = ({
   dueAmount,
   status,
   receiptNumber,
-  createdAt,
-  portalLink,
-  schoolName,
-  schoolAddress,
-  schoolContact,
-  schoolEmail,
+  createdAt
 }) => {
   const due = Number(dueAmount);
   const dueLine = due > 0 ? `₹${formatMoney(due)}` : "No Due Amount";
@@ -43,32 +38,32 @@ const buildEmailHtml = ({
 
     <p>
       This is to inform you that the <strong>fee details for the month of ${escapeHtml(
-        month
-      )} ${escapeHtml(year)}</strong> have been successfully added to your account.
+    month
+  )} ${escapeHtml(year)}</strong> have been successfully added to your account.
     </p>
 
     <p>Below are the fee details:</p>
 
     <div style="background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;padding:12px 14px;max-width:560px">
       <p style="margin:6px 0"><strong>📅 Fee Month &amp; Year:</strong> ${escapeHtml(
-        month
-      )} ${escapeHtml(year)}</p>
+    month
+  )} ${escapeHtml(year)}</p>
       <p style="margin:6px 0"><strong>💰 Total Fee Amount:</strong> ₹${formatMoney(
-        totalAmount
-      )}</p>
+    totalAmount
+  )}</p>
       <p style="margin:6px 0"><strong>💳 Paid Amount:</strong> ₹${formatMoney(
-        paidAmount
-      )}</p>
+    paidAmount
+  )}</p>
       <p style="margin:6px 0"><strong>⏳ Due Amount:</strong> ${dueLine}</p>
       <p style="margin:6px 0"><strong>📌 Payment Status:</strong> ${escapeHtml(
-        status
-      )}</p>
+    status
+  )}</p>
       <p style="margin:6px 0"><strong>🧾 Receipt Number:</strong> ${escapeHtml(
-        receiptNumber || "-"
-      )}</p>
+    receiptNumber || "-"
+  )}</p>
       <p style="margin:6px 0"><strong>🗓️ Record Created On:</strong> ${escapeHtml(
-        createdAt
-      )}</p>
+    createdAt
+  )}</p>
     </div>
 
     <p>
@@ -80,9 +75,7 @@ const buildEmailHtml = ({
     </p>
 
     <p>
-      🔗 <strong>School Portal:</strong> <a href="${escapeHtml(
-        portalLink
-      )}" target="_blank" rel="noreferrer">${escapeHtml(portalLink)}</a>
+      🔗 <strong>School Portal:</strong> <a href="https://schooldemo.akamify.com" target="_blank" rel="noreferrer">schooldemo.akamify.com</a>
     </p>
 
     <p>If you have already completed the payment, please ignore this message.</p>
@@ -90,10 +83,10 @@ const buildEmailHtml = ({
     <p style="margin-top:18px">
       Thank you for your cooperation.<br />
       Warm regards,<br />
-      <strong>${escapeHtml(schoolName)}</strong><br />
-      📍 ${escapeHtml(schoolAddress)}<br />
-      📞 ${escapeHtml(schoolContact)}<br />
-      ✉️ ${escapeHtml(schoolEmail)}
+      <strong>Akamify School</strong><br />
+      📍 123, street, Town, District, State, Country<br />
+      📞 +91 79053 25078<br />
+      ✉️ akamifyschool@gmail.com
     </p>
   </div>
   `;
@@ -205,7 +198,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Vercel Function Error:', error);
-    
+
     res.status(500).json({
       success: false,
       error: error?.message || 'Unknown error',
