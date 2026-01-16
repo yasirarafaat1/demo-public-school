@@ -1,4 +1,7 @@
-const nodemailer = require('nodemailer');
+// Vercel Function for Fee Email
+// File: api/send-fee-email.js
+
+import nodemailer from 'nodemailer';
 
 const formatMoney = (value) => {
   const n = Number(value);
@@ -96,24 +99,18 @@ const buildEmailHtml = ({
   `;
 };
 
-// Create transporter using environment variables
-const transporter = nodemailer.createTransporter({
-  host: process.env.SMTP_HOST || process.env.VITE_SMTP_HOST,
-  port: process.env.SMTP_PORT || process.env.VITE_SMTP_PORT || 587,
-  secure: (process.env.SMTP_SECURE || process.env.VITE_SMTP_SECURE) === 'true',
-  auth: {
-    user: process.env.SMTP_USER || process.env.VITE_SMTP_USER,
-    pass: process.env.SMTP_PASS || process.env.VITE_SMTP_PASS,
-  },
-});
+export default async function handler(req, res) {
+  // Only allow POST requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
 
-module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const {
       to,
       studentName,
@@ -130,30 +127,46 @@ module.exports = async function handler(req, res) {
       schoolAddress,
       schoolContact,
       schoolEmail,
-    } = req.body || {};
+    } = body;
 
+    // Validate required fields
     if (!to) {
-      res.status(400).json({ error: "Missing recipient email (to)" });
-      return;
+      return res.status(400).json({ error: 'Missing recipient email (to)' });
     }
 
-    // Check if required environment variables are set
-    const smtpHost = process.env.SMTP_HOST || process.env.VITE_SMTP_HOST;
-    const smtpUser = process.env.SMTP_USER || process.env.VITE_SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS;
-    
+    const smtpHost = process.env.VITE_SMTP_HOST;
+    const smtpPortRaw = process.env.VITE_SMTP_PORT;
+    const smtpSecureRaw = process.env.VITE_SMTP_SECURE;
+    const smtpUser = process.env.VITE_SMTP_USER;
+    const smtpPass = process.env.VITE_SMTP_PASS;
+
     if (!smtpHost || !smtpUser || !smtpPass) {
-      console.error('Missing SMTP configuration:', {
-        host: !!smtpHost,
-        user: !!smtpUser,
-        pass: !!smtpPass
+      return res.status(500).json({
+        success: false,
+        error: 'SMTP env vars are not configured on the server',
+        message: 'Failed to send email'
       });
-      res.status(500).json({ error: "Email service configuration missing. Please contact administrator." });
-      return;
     }
 
-    const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.VITE_EMAIL_FROM_ADDRESS || smtpUser;
-    const fromName = process.env.EMAIL_FROM_NAME || process.env.VITE_EMAIL_FROM_NAME || schoolName || "Demo Public School";
+    const smtpPort = smtpPortRaw ? Number(smtpPortRaw) : 587;
+    const smtpSecure = smtpSecureRaw === 'true' || smtpSecureRaw === '1';
+
+    // Create Nodemailer transporter with your SMTP config
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: Number.isFinite(smtpPort) ? smtpPort : 587,
+      secure: smtpSecure, // true for 465, false for other ports
+      auth: {
+        user: smtpUser,
+        pass: smtpPass
+      }
+    });
+
+    // Verify transporter connection
+    await transporter.verify();
+
+    const fromEmail = process.env.VITE_EMAIL_FROM || smtpUser;
+    const fromName = schoolName || "Demo Public School";
 
     const subject = `Fee Details Added: ${month} ${year}`;
 
@@ -167,34 +180,36 @@ module.exports = async function handler(req, res) {
       status: status || "pending",
       receiptNumber,
       createdAt: createdAt || new Date().toISOString(),
-      portalLink: portalLink || process.env.SCHOOL_PORTAL_LINK || "",
-      schoolName: schoolName || process.env.SCHOOL_NAME || "Demo Public School",
-      schoolAddress: schoolAddress || process.env.SCHOOL_ADDRESS || "",
-      schoolContact: schoolContact || process.env.SCHOOL_CONTACT || "",
-      schoolEmail: schoolEmail || process.env.SCHOOL_EMAIL || "",
+      portalLink: portalLink || "",
+      schoolName: schoolName || "Demo Public School",
+      schoolAddress: schoolAddress || "",
+      schoolContact: schoolContact || "",
+      schoolEmail: schoolEmail || "",
     });
 
+    // Send email
     const mailOptions = {
       from: `"${fromName}" <${fromEmail}>`,
-      to: Array.isArray(to) ? to.join(', ') : to,
+      to: to,
       subject: subject,
-      html: html,
+      html: html
     };
 
     const info = await transporter.sendMail(mailOptions);
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       messageId: info.messageId,
-      response: 'Fee email sent successfully' 
+      message: 'Fee email sent successfully'
     });
+
   } catch (error) {
-    console.error('Fee email sending error:', error);
+    console.error('Vercel Function Error:', error);
     
-    // Ensure we always send JSON response
-    res.status(500).json({ 
-      error: 'Failed to send fee email', 
-      details: error.message 
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Unknown error',
+      message: 'Failed to send fee email'
     });
   }
 }
