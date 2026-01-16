@@ -494,6 +494,24 @@ export const isSessionInPast = (session) => {
  */
 export const assignStudentToClass = async (assignmentData) => {
     try {
+        // Check if student is already assigned to this class/session combination
+        const { data: existingAssignment, error: checkError } = await supabase
+            .from('student_classes')
+            .select('*')
+            .eq('student_id', assignmentData.studentId)
+            .eq('class_id', assignmentData.classId)
+            .eq('session_id', assignmentData.sessionId)
+            .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            // PGRST116 means no rows found, which is what we want
+            throw checkError;
+        }
+
+        if (existingAssignment) {
+            throw new Error('Student is already assigned to this class for this session');
+        }
+
         const assignmentToInsert = {
             student_id: assignmentData.studentId,
             class_id: assignmentData.classId,

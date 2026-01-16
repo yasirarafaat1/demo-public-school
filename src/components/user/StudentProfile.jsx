@@ -376,7 +376,11 @@ const StudentProfile = ({ student, onBack, onUpdate }) => {
         rollNumber: "",
       });
     } catch (err) {
-      setError("Failed to save assignment. Please try again.");
+      if (err.message && err.message.includes('already assigned')) {
+        setError("Student is already assigned to this class for this session.");
+      } else {
+        setError("Failed to save assignment. Please try again.");
+      }
       console.error(err);
     } finally {
       setLoading(false);

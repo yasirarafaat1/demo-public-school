@@ -145,7 +145,7 @@ const ClassStudentsView = () => {
                 </Button>
               </div>
               <div>
-                <h4 className="mb-0">{classInfo?.class_name || "Class"}</h4>
+                <h4 className="mb-0">{classInfo?.class_code || "Class"}</h4>
               </div>
               <div>
                 <Button
